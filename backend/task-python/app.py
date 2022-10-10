@@ -5,7 +5,7 @@ from flask import Flask
 from flask import make_response
 from flask import request
 
-from badcase_tagging import badcase_tagging_push
+from badcase_tagging import badcase_tagging_push, badcase_tagging_pull
 
 app = Flask(__name__)
 logger = logging.getLogger('gunicorn.error')
@@ -51,6 +51,23 @@ def badcase_push():
     res_dict["code"] = result.status_code
     res_dict["data"] = result.json()
 
+    return make_response(json.dumps(res_dict, ensure_ascii=False), res_dict["code"])
+
+
+@app.route('/badcase/pull', methods=['GET', ])
+def bad_case_pull():
+    res_dict = {
+        "code": 200,
+        "error": "",
+        "data": ""
+    }
+    ids, cases = badcase_tagging_pull()
+    if not cases:
+        res_dict["error"] = "no more cases available"
+        res_dict["code"] = 500
+        return make_response(json.dumps(res_dict, ensure_ascii=False), res_dict["code"])
+
+    res_dict["data"] = f"add test cases successfully! {len(cases)}/{len(ids)}"
     return make_response(json.dumps(res_dict, ensure_ascii=False), res_dict["code"])
 
 
