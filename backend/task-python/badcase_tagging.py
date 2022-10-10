@@ -18,6 +18,9 @@ from utils.utils_handler import Handlers
 from utils.utils_mysql import DataBaseMySQL
 from utils.utils_postgre import DataBasePostGre
 
+with open("conf/config.json", "r") as f:
+    config = json.load(f)
+
 
 class CMSBadCase:
     """每周二晚上 从线上拉取badcase 用于自动化测试集建设"""
@@ -103,13 +106,7 @@ class CMSBadCase:
 
     def sort_and_duplicate_data(self):
         """根据现有用例 对新来的数据 统计 排序 去重处理"""
-        dbinfo1 = {
-            'host': '172.16.23.33',
-            'user': 'root',
-            'password': '',
-            'port': 3306,
-            'dbname': 'nlpautotest'
-        }
+        dbinfo1 = config["DATABASE"]["AUTOTEST"]
         database_cases = DataBaseMySQL(dbinfo1).query("select * from skill_base_test;")
         info = DataBaseMySQL(dbinfo1).query("select max(id) id, max(case_version) case_version from skill_base_test;")
         self.max_id = info[0]["id"]
@@ -169,13 +166,7 @@ class TaggingLog:
     """从标注好的日志中去拉取 拉取并使用后标记为已拉取"""
 
     def __init__(self):
-        self.db_info = {
-            "dbname": "crawl",
-            "user": "postgres",
-            "password": "123456",
-            "host": "172.16.23.5",
-            "port": "30865"
-        }
+        self.db_info = config["DATABASE"]["TAGGING"]
         self.pg_instance = DataBasePostGre(self.db_info)
 
     def set_used(self, ls_hari_log_ids, test_sync="TRUE", test_sync_operator=357):
@@ -192,28 +183,13 @@ class TaggingLog:
         now_time = str(datetime.datetime.now())[:19]
         used_sql = f"""UPDATE ls_hari_log SET test_sync = {test_sync}, test_sync_time = '{now_time}', 
         test_sync_operator={test_sync_operator} WHERE ID in ({ids});"""
-        return self.pg_instance.query(used_sql)
+        return self.pg_instance.query_without_results(used_sql)
 
     def get_unused(self, like_str="skill_case", limit_str=2):
         unused_sql = f"""SELECT id,question_text,test_answer FROM ls_hari_log WHERE test_sync=FALSE AND test_task_id IN 
             (SELECT ID FROM ls_task WHERE status = 3 AND plan_id IN 
             (SELECT ID FROM ls_task_plan WHERE NAME LIKE '%{like_str}%' ORDER BY updated DESC LIMIT {limit_str}));"""
         return self.pg_instance.query(unused_sql)
-
-
-class TestCase:
-    def __init__(self):
-        self.dbinfo = {
-            'host': '172.16.23.33',
-            'user': 'root',
-            'password': '',
-            'port': 3306,
-            'dbname': 'nlpautotest'
-        }
-        self.mysql_instance = DataBaseMySQL(self.dbinfo)
-
-    def query(self, sql):
-        return self.mysql_instance.query(sql)
 
 
 def badcase_tagging_push(start_time=None, end_time=None, exclude_domain=None, exclude_intent=None):
@@ -247,18 +223,19 @@ def badcase_tagging_pull(like_str="skill_case", limit_str=2):
     case_position = 2
 
     """从测试用例拉取最新的id和case_version"""
-    case_instance = TestCase()
-    info = case_instance.query("select max(id) id, max(case_version) case_version from skill_base_test;")
+    dbinfo1 = config["DATABASE"]["AUTOTEST"]
+    info = DataBaseMySQL(dbinfo1).query("select max(id) id, max(case_version) case_version from skill_base_test;")
+
     max_id = info[0]["id"]
     max_version = info[0]["case_version"]
     case_id = max_id // 100 * 100 + 100
 
     """根据标注过的case 组装用例集 存入列表cases"""
     for log in logs:
+        ids.append(str(log[0]))
         case_id += 1
         right_data = json.loads(log[case_position])
         if right_data["source"] == "system_service":
-            ids.append(log[0])
             cases.append({
                 "id": case_id,
                 "question": right_data["correct_query"],
@@ -272,6 +249,12 @@ def badcase_tagging_pull(like_str="skill_case", limit_str=2):
                 "update_time": now_time,
                 "skill_source": "标注平台"
             })
+    if cases:
+        Handlers.dict_to_database(cases, dbinfo1, "skill_base_test")
+
+    """将处理过的case 标记为TRUE 下次拉取时自动过滤掉"""
+    if ids:
+        log_instance.set_used(ids, test_sync="TRUE")
     return ids, cases
 
 
