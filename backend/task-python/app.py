@@ -4,11 +4,41 @@ import logging
 from flask import Flask
 from flask import make_response
 from flask import request
+from flask_apscheduler import APScheduler
 
 from badcase_tagging import badcase_tagging_push, badcase_tagging_pull
 
+
+class Config(object):
+    JOBS = [
+        {
+            "id": "bad_case_pull",
+            "func": "__main__:badcase_tagging_pull",
+            "trigger": "cron",
+            "day_of_week": 1,  # 每周二
+            "hour": 9,  # 早上9点
+            "minute": 30,  # 30分
+        },
+        {
+            "id": "bad_case_push",
+            "func": "__main__:badcase_tagging_push",
+            "trigger": "cron",
+            "day_of_week": 1,  # 每周二
+            "hour": 9,  # 早上9点
+            "minute": 30,  # 30分
+        }
+    ]
+    SCHEDULER_API_ENABLED = True
+    SCHEDULER_TIMEZONE = 'Asia/Shanghai'
+
+
 app = Flask(__name__)
 logger = logging.getLogger('gunicorn.error')
+
+app.config.from_object(Config())
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
 
 
 @app.route('/badcase/push', methods=['POST', ])
