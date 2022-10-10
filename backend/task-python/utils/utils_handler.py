@@ -225,23 +225,10 @@ class DBHandler:
         except Exception as e:
             raise Exception("write sql failed:", e)
 
+    @staticmethod
+    def dict_to_database(py_dict, db_info, table_name):
+        return pd.DataFrame(py_dict).to_sql(name=table_name, if_exists="append", con=DBHandler.database_engine(db_info))
+
 
 class Handlers(UuidHandler, TimeHandler, ExcelHandler, PyHandler, FileHandler, DBHandler):
     pass
-
-
-if __name__ == '__main__':
-    database_info = {
-        "host": "localhost",
-        "password": "",
-        "dbname": "nlpautotest",
-        "user": "root",
-        "port": "3306",
-        "dbtype": "mysql",
-        "dbengine": "pymysql"
-    }
-    f = Handlers()
-    f.excel_to_database(sql_engine=f.database_engine(database_info),
-                        excel_path=r"C:\Users\admin\Desktop\2.0.1nlp团队多轮用例.xlsx",
-                        sheet_name="Sheet1",
-                        db_table_name="skill_base_test")
