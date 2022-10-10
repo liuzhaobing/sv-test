@@ -9,12 +9,14 @@
 7.标注完成
 8.用例入库
 """
+import json
 import requests
 import datetime
 from datetime import timedelta
 
 from utils.utils_handler import Handlers
 from utils.utils_mysql import DataBaseMySQL
+from utils.utils_postgre import DataBasePostGre
 
 
 class CMSBadCase:
@@ -163,6 +165,57 @@ class Tagging:
         return res
 
 
+class TaggingLog:
+    """从标注好的日志中去拉取 拉取并使用后标记为已拉取"""
+
+    def __init__(self):
+        self.db_info = {
+            "dbname": "crawl",
+            "user": "postgres",
+            "password": "123456",
+            "host": "172.16.23.5",
+            "port": "30865"
+        }
+        self.pg_instance = DataBasePostGre(self.db_info)
+
+    def set_used(self, ls_hari_log_ids, test_sync="TRUE", test_sync_operator=357):
+        """
+        ls_hari_log_ids 这里需要传入列表
+
+        test_sync 是否已同步 bool
+        test_sync_operator 同步作者 int
+        test_sync_time 同步时间 time
+        """
+        if not isinstance(ls_hari_log_ids, list):
+            return False
+        ids = ",".join(ls_hari_log_ids)
+        now_time = str(datetime.datetime.now())[:19]
+        used_sql = f"""UPDATE ls_hari_log SET test_sync = {test_sync}, test_sync_time = '{now_time}', 
+        test_sync_operator={test_sync_operator} WHERE ID in ({ids});"""
+        return self.pg_instance.query(used_sql)
+
+    def get_unused(self, like_str="skill_case", limit_str=2):
+        unused_sql = f"""SELECT id,question_text,test_answer FROM ls_hari_log WHERE test_sync=FALSE AND test_task_id IN 
+            (SELECT ID FROM ls_task WHERE status = 3 AND plan_id IN 
+            (SELECT ID FROM ls_task_plan WHERE NAME LIKE '%{like_str}%' ORDER BY updated DESC LIMIT {limit_str}));"""
+        return self.pg_instance.query(unused_sql)
+
+
+class TestCase:
+    def __init__(self):
+        self.dbinfo = {
+            'host': '172.16.23.33',
+            'user': 'root',
+            'password': '',
+            'port': 3306,
+            'dbname': 'nlpautotest'
+        }
+        self.mysql_instance = DataBaseMySQL(self.dbinfo)
+
+    def query(self, sql):
+        return self.mysql_instance.query(sql)
+
+
 def badcase_tagging_push(start_time=None, end_time=None, exclude_domain=None, exclude_intent=None):
     now = datetime.datetime.now()
     if not start_time:
@@ -183,5 +236,45 @@ def badcase_tagging_push(start_time=None, end_time=None, exclude_domain=None, ex
     return result, task_name
 
 
+def badcase_tagging_pull(like_str="skill_case", limit_str=2):
+    """从标注平台拉取标注过的case"""
+    log_instance = TaggingLog()
+    logs = log_instance.get_unused(like_str, limit_str)
+    now_time = str(datetime.datetime.now())[:19]
+
+    ids = []
+    cases = []
+    case_position = 2
+
+    """从测试用例拉取最新的id和case_version"""
+    case_instance = TestCase()
+    info = case_instance.query("select max(id) id, max(case_version) case_version from skill_base_test;")
+    max_id = info[0]["id"]
+    max_version = info[0]["case_version"]
+    case_id = max_id // 100 * 100 + 100
+
+    """根据标注过的case 组装用例集 存入列表cases"""
+    for log in logs:
+        case_id += 1
+        right_data = json.loads(log[case_position])
+        if right_data["source"] == "system_service":
+            ids.append(log[0])
+            cases.append({
+                "id": case_id,
+                "question": right_data["correct_query"],
+                "source": right_data["source"],
+                "domain": right_data["domain_name"],
+                "intent": right_data["intent_name"],
+                "paraminfo": right_data["param_info"],
+                "usetest": 4,  # 先放到用例池
+                "case_version": max_version,
+                "create_time": now_time,
+                "update_time": now_time,
+                "skill_source": "标注平台"
+            })
+    return ids, cases
+
+
 if __name__ == '__main__':
-    badcase_tagging_push(exclude_domain=["indoornavigation", "around"])
+    # badcase_tagging_push(exclude_domain=["indoornavigation", "around"])
+    badcase_tagging_pull()
