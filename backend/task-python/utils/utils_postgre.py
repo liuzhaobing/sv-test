@@ -13,6 +13,10 @@ class DataBasePostGre:
         self.conn.commit()
         return self.cursor.fetchall()
 
+    def query_without_results(self, query_string):
+        self.cursor.execute(query_string)
+        return self.conn.commit()
+
     def __del__(self):
         self.cursor.close()
         self.conn.close()
