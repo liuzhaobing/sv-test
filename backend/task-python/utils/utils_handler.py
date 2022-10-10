@@ -227,7 +227,8 @@ class DBHandler:
 
     @staticmethod
     def dict_to_database(py_dict, db_info, table_name):
-        return pd.DataFrame(py_dict).to_sql(name=table_name, if_exists="append", con=DBHandler.database_engine(db_info))
+        return pd.DataFrame(py_dict).to_sql(name=table_name, if_exists="append", index=False,
+                                            con=DBHandler.database_engine(db_info))
 
 
 class Handlers(UuidHandler, TimeHandler, ExcelHandler, PyHandler, FileHandler, DBHandler):
