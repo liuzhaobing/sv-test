@@ -5,8 +5,8 @@ import logging
 from flask import Flask
 from flask import make_response
 from flask import request
-from flask_apscheduler import APScheduler
-from apscheduler.schedulers.background import BackgroundScheduler
+# from flask_apscheduler import APScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 
 from badcase_tagging import badcase_tagging_push, badcase_tagging_pull
 
@@ -37,10 +37,10 @@ class Config(object):
 app = Flask(__name__)
 logger = logging.getLogger('gunicorn.error')
 
-app.config.from_object(Config())
-scheduler = APScheduler(BackgroundScheduler())
-scheduler.init_app(app)
-scheduler.start()
+# app.config.from_object(Config())
+# scheduler = APScheduler(BackgroundScheduler())
+# scheduler.init_app(app)
+# scheduler.start()
 
 
 @app.route('/badcase/push', methods=['POST', ])
