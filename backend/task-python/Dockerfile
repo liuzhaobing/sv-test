@@ -10,4 +10,4 @@ ENV PIPURL "https://pypi.tuna.tsinghua.edu.cn/simple"
 RUN pip3 install  -i ${PIPURL} --upgrade pip
 RUN pip3 install  -i ${PIPURL} -r requirements.txt
 
-ENTRYPOINT ["/run.sh"]
+CMD ["gunicorn", "-c", "gun.py", "app:app"]
