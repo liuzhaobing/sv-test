@@ -15,6 +15,15 @@
       "password": "123456",
       "port": "30865",
       "dbname": "crawl"
+    },
+    "CMS": {
+      "host": "172.16.13.134",
+      "user": "bigdata_sync",
+      "password": "1qaz@WSX",
+      "port": 31145,
+      "dbname": "kbs_cms",
+      "dbtype": "mysql",
+      "dbengine": "pymysql"
     }
   }
 }
