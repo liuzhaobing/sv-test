@@ -1,48 +1,47 @@
-import datetime
-import os
-
 from apscheduler.schedulers.blocking import BlockingScheduler
 import logging
 
 from badcase_tagging import badcase_tagging_push, badcase_tagging_pull
+from qa_sync import CMSSync
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+fh = logging.FileHandler(filename=f'crontab.log', mode="a", encoding="utf-8")
+fh.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(module)s] [%(funcName)s]: %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logger.addHandler(console)
+
+logger.info("logger started success!")
 
 
-def run():
+def auto_push_bad_case():
     result, task_name = badcase_tagging_push()
     logger.info("badcase_tagging_push result: ", result)
     logger.info("badcase_tagging_push task_name: ", task_name)
+
+
+def auto_pull_bad_case():
     ids, cases = badcase_tagging_pull()
     logger.info("badcase_tagging_pull ids: ", ids)
-    logger.info("badcase_tagging_pull cases: ", cases)
+    # logger.info("badcase_tagging_pull cases: ", cases)
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
-filename = os.path.abspath(__file__) + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".log"
-file = open(filename, "w")
-file.write(filename)
-file.close()
-handler = logging.FileHandler(filename)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
+def auto_sync_qa_case():
+    logger.info("auto sync qa case from cms start!")
+    CMSSync().qa_sync(3)
+    logger.info("auto sync qa case from cms end!")
 
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-
-logger.addHandler(handler)
-logger.addHandler(console)
-logger.info("Start print log")
-try:
-    open(filename, "rb")
-except (SystemExit, KeyboardInterrupt):
-    raise
-except Exception as e:
-    logger.error("Faild to open filename from logger.error", exc_info=True)
-
-logger.info("Finish")
 
 if __name__ == '__main__':
     scheduler = BlockingScheduler()
-    scheduler.add_job(run, "cron", day_of_week="tue", hour="9", minute="0", second="30", timezone="Asia/Shanghai")
+    scheduler.add_job(auto_push_bad_case, "cron", day_of_week="tue", hour="9", minute="0", second="30",
+                      timezone="Asia/Shanghai")
+    scheduler.add_job(auto_pull_bad_case, "cron", day_of_week="tue", hour="9", minute="0", second="30",
+                      timezone="Asia/Shanghai")
+    scheduler.add_job(auto_sync_qa_case, "cron", hour="1", minute="0", second="30",
+                      timezone="Asia/Shanghai")
     scheduler.start()
