@@ -32,7 +32,8 @@ class CMSBadCase:
         self.weekly_data_old = []
         self.count = 0
         self.pagesize = 100
-        self.url = "http://172.16.23.83:30515/roc/quoto/cdmCo"
+        # self.url = "http://172.16.23.83:30515/roc/quoto/cdmCo"
+        self.url = "http://kubernetes-prod-3.cloudminds.com:30515/data/quoto/cdmCo"
         self.headers = {
             'cookie': "JSESSIONID=98A2B1C17DC869F1E9EEFAA46A665B91",
             'Content-Type': "application/json",
@@ -236,13 +237,25 @@ def badcase_tagging_pull(like_str="skill_case", limit_str=2):
         case_id += 1
         right_data = json.loads(log[case_position])
         if right_data["source"] == "system_service":
+            try:
+                paraminfo = right_data["param_info"]\
+                    .replace("beforevalue", "BeforeValue")\
+                    .replace("value", "Value")\
+                    .replace("entitytype", "EntityType")\
+                    .replace("name", "Name")
+            except:
+                paraminfo = right_data["param_info"]
+            try:
+                json.loads(paraminfo)
+            except:
+                paraminfo = ""
             cases.append({
                 "id": case_id,
                 "question": right_data["correct_query"],
                 "source": right_data["source"],
                 "domain": right_data["domain_name"],
                 "intent": right_data["intent_name"],
-                "paraminfo": right_data["param_info"],
+                "paraminfo": paraminfo,
                 "usetest": 4,  # 先放到用例池
                 "case_version": max_version,
                 "create_time": now_time,
