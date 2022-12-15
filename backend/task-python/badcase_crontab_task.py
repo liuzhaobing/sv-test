@@ -2,6 +2,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 import logging
 
 from badcase_tagging import badcase_tagging_push, badcase_tagging_pull
+from cases_count import cases_construction
 from qa_sync import CMSSync
 
 logger = logging.getLogger(__name__)
@@ -43,5 +44,7 @@ if __name__ == '__main__':
     scheduler.add_job(auto_pull_bad_case, "cron", day_of_week="tue", hour="9", minute="0", second="30",
                       timezone="Asia/Shanghai")
     scheduler.add_job(auto_sync_qa_case, "cron", hour="1", minute="0", second="30",
+                      timezone="Asia/Shanghai")
+    scheduler.add_job(cases_construction, "cron", hour="15", minute="0", second="0",
                       timezone="Asia/Shanghai")
     scheduler.start()
