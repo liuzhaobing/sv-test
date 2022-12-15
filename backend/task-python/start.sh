@@ -1,5 +1,6 @@
 #!/bin/bash
-
+git stash
+git pull
 docker stop flask_python_task
 docker rm flask_python_task
 docker rmi flask_python_task:1.0
