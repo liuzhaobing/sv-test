@@ -10,9 +10,7 @@ import json
 import requests
 import redis
 
-from badcase_crontab_task import logger
 from badcase_tagging import CMSBadCase
-from utils.utils_handler import Handlers
 
 
 class CMSAsrFilter(CMSBadCase):
@@ -153,13 +151,11 @@ def asr_filter_pull(start_time=None, end_time=None,
         start_time = str(now - timedelta(days=1))[:10] + " 00:00:00"
     if not end_time:
         end_time = str(now - timedelta(days=0))[:10] + " 00:00:00"
-    logger.info(f"asr_filter_pull start: start_time {start_time}, end_time {end_time}")
     t = CMSAsrFilter()
     t.get_all_data(start_time, end_time)
     list_map = t.sort_and_duplicate_data()
     file_name = f"asr_filter_badcase_{start_time[:10]}_{end_time[5:10]}_"
     if not list_map:
-        logger.info(f"asr_filter_pull end: without file_name")
         return None
 
     # 将数据推送到下载服务器中
@@ -168,7 +164,6 @@ def asr_filter_pull(start_time=None, end_time=None,
     try:
         file_name = response.json()["data"]["data"]
         download_url = f"http://{server_ip}/api/v1/download?filename={file_name}"
-        logger.info(f"asr_filter_pull end, excel file download address: {download_url}")
 
         feishu_text = f"""干扰测试结果需处理{end_time[:10]}：\n"""
         developer_map = {}
@@ -187,7 +182,6 @@ def asr_filter_pull(start_time=None, end_time=None,
                              "content": json.dumps({"text": feishu_text}, ensure_ascii=False)
                          })
     except:
-        logger.info(f"asr_filter_pull end: without file_name")
         return None
 
 
