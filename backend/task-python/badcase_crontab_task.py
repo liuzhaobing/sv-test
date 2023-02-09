@@ -3,6 +3,7 @@ import logging
 
 from badcase_tagging import badcase_tagging_push, badcase_tagging_pull
 from cases_count import cases_construction
+from filter_pulling import asr_filter_pull
 from qa_sync import CMSSync
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,12 @@ def auto_sync_qa_case():
     logger.info("auto sync qa case from cms end!")
 
 
+def auto_push_asr_filter_case():
+    logger.info("auto_push_asr_filter_case start!")
+    asr_filter_pull(server_ip="172.16.23.33:27997", feishu_url="https://open.feishu.cn/open-apis/bot/v2/hook/be8ad56c-2939-4ecf-a186-62763f08aefe")
+    logger.info("auto_push_asr_filter_case end!")
+
+
 if __name__ == '__main__':
     scheduler = BlockingScheduler()
     scheduler.add_job(auto_push_bad_case, "cron", day_of_week="tue", hour="9", minute="0", second="30",
@@ -46,5 +53,7 @@ if __name__ == '__main__':
     scheduler.add_job(auto_sync_qa_case, "cron", hour="1", minute="0", second="30",
                       timezone="Asia/Shanghai")
     scheduler.add_job(cases_construction, "cron", hour="15", minute="0", second="0",
+                      timezone="Asia/Shanghai")
+    scheduler.add_job(auto_push_asr_filter_case, "cron", hour="9", minute="30", second="0",
                       timezone="Asia/Shanghai")
     scheduler.start()
