@@ -11,6 +11,26 @@ import requests
 import redis
 
 from badcase_tagging import CMSBadCase
+from utils.utils_mysql import DataBaseMySQL
+
+with open("conf/config.json", "r") as f:
+    config = json.load(f)
+
+
+def big_data_tagging_user_table(query):
+    """从大数据库中查数据库smartomp_rbac"""
+    big_data_dbinfo = config["DATABASE"]["CMS"]
+    big_data_dbinfo["dbname"] = "smartomp_rbac"
+    return DataBaseMySQL(big_data_dbinfo).query(query)
+
+
+def find_tagging_user():
+    """从数据库中查找标注人员信息"""
+    tagging_user_list = big_data_tagging_user_table("select id,username,description from sunny_editor;")
+    tagging_user_map = {}
+    for u in tagging_user_list:
+        tagging_user_map[str(u["id"])] = f'{u["username"]}{u["description"]}'
+    return tagging_user_map
 
 
 class CMSAsrFilter(CMSBadCase):
@@ -71,6 +91,8 @@ class CMSAsrFilter(CMSBadCase):
         if self.count % self.pagesize != 0:
             pages += 1
 
+        tagging_user_map = find_tagging_user()
+
         for p in range(pages):
             data = self.get_data_by_page(start_time, end_time, p)
             for d in data:
@@ -84,7 +106,7 @@ class CMSAsrFilter(CMSBadCase):
                     "AgentID": d["dwm_svo_anno_label_event_i_d"]["sv_agent_id"],
                     "标注内容": d["dwm_svo_anno_label_event_i_d"]["label_type_name"],
                     "标注时间": d["dwm_svo_anno_label_event_i_d"]["submit_time"],
-                    "标注人员": d["dwm_svo_anno_label_event_i_d"]["operator_id"],
+                    "标注人员": tagging_user_map[d["dwm_svo_anno_label_event_i_d"]["operator_id"]],
                     "日志时间": d["dwm_svo_anno_label_event_i_d"]["event_time"],
                     "question_id": d["dwm_svo_anno_label_event_i_d"]["question_id"]
                 }
@@ -133,8 +155,11 @@ def resign_case(case_info):
     developer = ""
     if case_info["source"] == "openkg_qa":
         developer = "@Bei Chen 陈贝"
-    if case_info["source"] in ["user_default_qa", "third_chitchat", "common_sense_qa"]:
+    if case_info["source"] in ["user_default_qa", "third_chitchat"]:
         developer = "@Jessica Li 李翠姣"
+    if case_info["source"] == "common_sense_qa":
+        developer = "@Raino Wu 吴雨浓"
+
     if case_info["source"] == "system_service":
         developer = "@Xia Fu 付霞"
     if case_info["intent"] == "SingerSong":
