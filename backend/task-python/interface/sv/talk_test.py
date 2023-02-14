@@ -17,18 +17,22 @@ def pb_to_json(pb):
 def json_to_pb_talk(json_obj):
     """https://blog.csdn.net/hsy12342611/article/details/128108829"""
     json_str = json.dumps(json_obj, indent=4)
-    yield json_format.Parse(json_str, talk_pb2.TalkRequest())
+    return json_format.Parse(json_str, talk_pb2.TalkRequest())
 
 
 def run(url, payload):
+    def handle_payload(TalkRequest):
+        yield json_to_pb_talk(TalkRequest)
+
     with grpc.insecure_channel(url) as channel:
         stub = talk_pb2_grpc.TalkStub(channel)
-        responses = stub.StreamingTalk(json_to_pb_talk(payload))
+        responses = stub.StreamingTalk(handle_payload(payload))
         response = list(responses)
 
     for r in response:
         r = json.loads(pb_to_json(r))
         print(r)
+    print(len(response))
 
 
 if __name__ == '__main__':
