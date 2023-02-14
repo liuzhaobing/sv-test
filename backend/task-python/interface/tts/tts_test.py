@@ -17,7 +17,7 @@ def pb_to_json(pb):
 def json_to_pb_tts_call(json_obj):
     """https://blog.csdn.net/hsy12342611/article/details/128108829"""
     json_str = json.dumps(json_obj, indent=4)
-    yield json_format.Parse(json_str, tts_pb2.TtsReq())
+    return json_format.Parse(json_str, tts_pb2.TtsReq())
 
 
 def run(url, payload):
@@ -27,8 +27,9 @@ def run(url, payload):
         response = list(responses)
 
     for r in response:
-        # r = json.loads(pb_to_json(r))
+        r = json.loads(pb_to_json(r))
         print(r)
+    print(len(response))
 
 
 if __name__ == '__main__':
