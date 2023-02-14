@@ -15,6 +15,7 @@ def pb_to_json(pb):
 
 
 def json_to_pb_talk(json_obj):
+    """https://blog.csdn.net/hsy12342611/article/details/128108829"""
     json_str = json.dumps(json_obj, indent=4)
     yield json_format.Parse(json_str, talk_pb2.TalkRequest())
 
