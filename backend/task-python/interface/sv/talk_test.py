@@ -14,22 +14,15 @@ def pb_to_json(pb):
     return json_format.MessageToJson(pb)
 
 
-def run():
-    def talk_req():
-        yield talk_pb2.TalkRequest(is_full=True,
-                                   agent_id=666,
-                                   session_id=str(uuid.uuid4()),
-                                   question_id=str(uuid.uuid4()),
-                                   event_type=0,
-                                   robot_id="123",
-                                   tenant_code="cloudminds",
-                                   version="v3",
-                                   test_mode=False,
-                                   asr=talk_pb2.Asr(lang="CH", text="背一首杜甫的诗"))
+def json_to_pb_talk(json_obj):
+    json_str = json.dumps(json_obj, indent=4)
+    yield json_format.Parse(json_str, talk_pb2.TalkRequest())
 
-    with grpc.insecure_channel('172.16.23.85:30811') as channel:
+
+def run(url, payload):
+    with grpc.insecure_channel(url) as channel:
         stub = talk_pb2_grpc.TalkStub(channel)
-        responses = stub.StreamingTalk(talk_req().__iter__())
+        responses = stub.StreamingTalk(json_to_pb_talk(payload))
         response = list(responses)
 
     for r in response:
@@ -38,4 +31,19 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+
+    run(url="172.16.23.85:30811", payload={
+        "isfull": True,
+        "testMode": False,
+        "agentid": 666,
+        "sessionid": str(uuid.uuid4()),
+        "questionid": str(uuid.uuid4()),
+        "eventtype": 0,
+        "robotid": "123",
+        "tenantcode": "cloudminds",
+        "version": "v3",
+        "asr": {
+            "lang": "CH",
+            "text": "现在几点了"
+        }
+    })
