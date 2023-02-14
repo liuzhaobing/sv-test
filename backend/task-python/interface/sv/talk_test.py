@@ -1,9 +1,17 @@
 # -*- coding:utf-8 -*-
 import uuid
 
+import json
 import grpc
 import talk_pb2
 import talk_pb2_grpc
+
+from google.protobuf import json_format
+
+
+def pb_to_json(pb):
+    """将google.protobuf.struct类型转为json_string类型"""
+    return json_format.MessageToJson(pb)
 
 
 def run():
@@ -17,7 +25,7 @@ def run():
                                    tenant_code="cloudminds",
                                    version="v3",
                                    test_mode=False,
-                                   asr=talk_pb2.Asr(lang="CH", text="现在几点了"))
+                                   asr=talk_pb2.Asr(lang="CH", text="背一首杜甫的诗"))
 
     with grpc.insecure_channel('172.16.23.85:30811') as channel:
         stub = talk_pb2_grpc.TalkStub(channel)
@@ -25,15 +33,8 @@ def run():
         response = list(responses)
 
     for r in response:
-        source = r.source
-        print(source)
-        cost = r.cost
-        print(cost)
-        tts = r.tts
-        for t in tts:
-            print(t.text)
-        domain = r.hit_log.fields["domain"].string_value
-        print(domain)
+        r = json.loads(pb_to_json(r))
+        print(r)
 
 
 if __name__ == '__main__':
