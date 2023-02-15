@@ -105,7 +105,7 @@ def bad_case_pull():
     return make_response(json.dumps(res_dict, ensure_ascii=False), res_dict["code"])
 
 
-@app.route('/interface', methods=['GET', ])
+@app.route('/interface', methods=['POST', ])
 def interface_test():
     import traceback
 
@@ -149,11 +149,16 @@ ins = Interface(url={url}, stub=pb2_grpc.{stub})
 result = ins.call(message=pb2.{req_func}, func=ins.stub.{call_func}, payload={payload}, iterator={iterator})
 proResult["result"] = result
         """
+    if not request.content_type.startswith("application/json"):
+        return make_response(json.dumps({"error": "not allowed content type!"}, ensure_ascii=False), 500)
+
+    data = request.get_data()
+    json_re = json.loads(data)
 
     def pb_to_json(pb):
         return json_format.MessageToJson(pb)
     import os
-    proto_file = "talk.proto"
+    proto_file = json_re["proto"] if json_re.__contains__("proto") else "abc.proto"
     proto_file_pb2 = proto_file.split(".")[0] + "_pb2.py"
     proto_file_pb2_grpc = proto_file.split(".")[0] + "_pb2_grpc.py"
 
@@ -164,25 +169,15 @@ proResult["result"] = result
         result = os.system(cmd)
         if result != 0:
             return make_response({"error": f'error when execute command: {cmd}', "code": result}, 200)
-
+    url = json_re["url"]
     proResult = {"result": []}
     sc = template(proto=proto_file.split(".")[0],
-                  url="'172.16.23.85:30811'",
-                  payload={"isfull": True,
-                           "testMode": False,
-                           "agentid": 666,
-                           "sessionid": "123456",
-                           "questionid": "123456",
-                           "eventtype": 0,
-                           "robotid": "123",
-                           "version": "v3",
-                           "tenantcode": "cloudminds",
-                           "asr": {"lang": "CH", "text": "背一首杜甫的登高"}
-                           },
-                  stub="TalkStub",
-                  req_func="TalkRequest()",
-                  call_func="StreamingTalk",
-                  iterator=True)
+                  url=f"'{url}'",
+                  payload=json_re["payload"],
+                  stub=json_re["stub"],
+                  req_func=json_re["req_func"],
+                  call_func=json_re["call_func"],
+                  iterator=json_re["iterator"])
     try:
         exec(sc, {"proResult": proResult})
     except Exception as e:
