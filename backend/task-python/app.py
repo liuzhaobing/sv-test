@@ -146,7 +146,7 @@ class Interface:
 
 
 ins = Interface(url={url}, stub=pb2_grpc.{stub})
-result = ins.call(message=pb2.{req_func}, func=ins.stub.{call_func}, payload={payload}, iterator={iterator})
+result = ins.call(message=pb2.{req_func}(), func=ins.stub.{call_func}, payload={payload}, iterator={iterator})
 proResult["result"] = result
         """
     if not request.content_type.startswith("application/json"):
