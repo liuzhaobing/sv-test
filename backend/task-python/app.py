@@ -116,6 +116,7 @@ import {proto}_pb2 as pb2
 import {proto}_pb2_grpc as pb2_grpc
 import json
 import grpc
+import time
 from google.protobuf import json_format
 
 
@@ -146,8 +147,10 @@ class Interface:
 
 
 ins = Interface(url={url}, stub=pb2_grpc.{stub})
+start_time = time.time()
 result = ins.call(message=pb2.{req_func}(), func=ins.stub.{call_func}, payload={payload}, iterator={iterator})
 proResult["result"] = result
+proResult["cost"] = int((time.time() - start_time) * 1000)
         """
     if not request.content_type.startswith("application/json"):
         return make_response(json.dumps({"error": "not allowed content type!"}, ensure_ascii=False), 500)
@@ -185,7 +188,7 @@ proResult["result"] = result
     results = []
     for r in proResult["result"]:
         results.append(json.loads(pb_to_json(r)))
-    return make_response(results, 200)
+    return make_response({"cost": proResult["cost"], "data": results}, 200)
 
 
 if __name__ != '__main__':
