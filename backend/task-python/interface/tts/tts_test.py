@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import uuid
+import wave
 
 import json
 import grpc
@@ -20,16 +21,31 @@ def json_to_pb_tts_call(json_obj):
     return json_format.Parse(json_str, tts_pb2.TtsReq())
 
 
+def write_wav(pcm_bytes, wav_file):
+    with wave.open(wav_file, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(pcm_bytes)
+
+
 def run(url, payload):
     with grpc.insecure_channel(url) as channel:
         stub = tts_pb2_grpc.CloudMindsTTSStub(channel)
         responses = stub.Call(json_to_pb_tts_call(payload))
         response = list(responses)
 
+    pcm = b""
+    config_text = None
+    debug_info = []
+
     for r in response:
+        pcm += r.synthesized_audio.pcm
         r = json.loads(pb_to_json(r))
-        print(r)
-    print(len(response))
+        config_text = r["configText"] if r.__contains__("configText") else config_text
+        debug_info.append(r["debugInfo"]) if r.__contains__("debugInfo") else None
+
+    write_wav(pcm, f"./test.wav")
 
 
 if __name__ == '__main__':
