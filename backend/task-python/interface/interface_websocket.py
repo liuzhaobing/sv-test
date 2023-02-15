@@ -5,8 +5,6 @@ import traceback
 def template(proto, url, payload, stub, req_func, call_func, iterator):
     return f"""
 # -*- coding:utf-8 -*-
-import uuid
-import json
 import interface.{proto}.{proto}_pb2 as pb2
 import interface.{proto}.{proto}_pb2_grpc as pb2_grpc
 from interface.interface import Interface
