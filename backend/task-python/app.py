@@ -5,6 +5,8 @@ import logging
 from flask import Flask
 from flask import make_response
 from flask import request
+from google.protobuf import json_format
+
 # from flask_apscheduler import APScheduler
 # from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -101,6 +103,94 @@ def bad_case_pull():
 
     res_dict["data"] = f"add test cases successfully! {len(cases)}/{len(ids)}"
     return make_response(json.dumps(res_dict, ensure_ascii=False), res_dict["code"])
+
+
+@app.route('/interface', methods=['GET', ])
+def interface_test():
+    import traceback
+
+    def template(proto, url, payload, stub, req_func, call_func, iterator):
+        return f"""
+    # -*- coding:utf-8 -*-
+import {proto}_pb2 as pb2
+import {proto}_pb2_grpc as pb2_grpc
+import json
+import grpc
+from google.protobuf import json_format
+
+
+def pb_to_json(pb):
+    return json_format.MessageToJson(pb)
+
+
+def json_to_pb(json_obj, message):
+    return json_format.Parse(json.dumps(json_obj, indent=4), message)
+
+
+def yield_message(message):
+    yield message
+
+
+class Interface:
+    def __init__(self, url, stub):
+        self.channel = grpc.insecure_channel(url)
+        self.stub = stub(self.channel)
+
+    def __del__(self):
+        self.channel.close()
+
+    @staticmethod
+    def call(payload, message, func, iterator=False):
+        request = yield_message(json_to_pb(payload, message)) if iterator else json_to_pb(payload, message)
+        return list(func(request))
+
+
+ins = Interface(url={url}, stub=pb2_grpc.{stub})
+result = ins.call(message=pb2.{req_func}, func=ins.stub.{call_func}, payload={payload}, iterator={iterator})
+proResult["result"] = result
+        """
+
+    def pb_to_json(pb):
+        return json_format.MessageToJson(pb)
+    import os
+    proto_file = "talk.proto"
+    proto_file_pb2 = proto_file.split(".")[0] + "_pb2.py"
+    proto_file_pb2_grpc = proto_file.split(".")[0] + "_pb2_grpc.py"
+
+    if not os.path.isfile(proto_file_pb2) or not os.path.isfile(proto_file_pb2_grpc):
+        if not os.path.isfile(proto_file):
+            return make_response({"error": f"not find {proto_file}"}, 200)
+        cmd = f'python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. {proto_file}'
+        result = os.system(cmd)
+        if result != 0:
+            return make_response({"error": f'error when execute command: {cmd}', "code": result}, 200)
+
+    proResult = {"result": []}
+    sc = template(proto=proto_file.split(".")[0],
+                  url="'172.16.23.85:30811'",
+                  payload={"isfull": True,
+                           "testMode": False,
+                           "agentid": 666,
+                           "sessionid": "123456",
+                           "questionid": "123456",
+                           "eventtype": 0,
+                           "robotid": "123",
+                           "version": "v3",
+                           "tenantcode": "cloudminds",
+                           "asr": {"lang": "CH", "text": "背一首杜甫的登高"}
+                           },
+                  stub="TalkStub",
+                  req_func="TalkRequest()",
+                  call_func="StreamingTalk",
+                  iterator=True)
+    try:
+        exec(sc, {"proResult": proResult})
+    except Exception as e:
+        return make_response({"error": traceback.format_exc()}, 200)
+    results = []
+    for r in proResult["result"]:
+        results.append(json.loads(pb_to_json(r)))
+    return make_response(results, 200)
 
 
 if __name__ != '__main__':
