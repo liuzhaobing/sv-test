@@ -21,7 +21,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-@app.route('/upload', methods=['POST', ])
+@app.route('/files', methods=['POST', ])
 def upload():
     """{"file": file.proto}"""
     if request.method == 'POST':
@@ -39,6 +39,12 @@ def upload():
             file.save(file.filename)
             return make_response({"status": "success", "error": ""}, 200)
         return make_response({"status": "failure", "error": "not support file type!"}, 500)
+
+
+@app.route('/files', methods=['GET', ])
+def list_proto_files():
+    files = os.listdir()
+    return make_response({"status": "success", "data": [i for i in files if allowed_file(i)]}, 200)
 
 
 def generate_pb(proto_file):
