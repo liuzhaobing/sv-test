@@ -1,0 +1,66 @@
+syntax = "proto3";
+package nlu.v1;
+option go_package = "nlp-classify-server/api/classify/v1;v1";
+
+import "google/protobuf/empty.proto";
+
+
+service Classify{
+  rpc IntentRecognize(NluRequest) returns (NluResponse){
+  };
+  rpc GetNluVersion (google.protobuf.Empty) returns (VersionResponse){
+  };
+}
+
+message NluRequest{
+    string Query = 1 [ json_name = "query" ]; //@gotags:json:"query" validate:"required"
+
+    string TraceId = 2 [json_name = "traceid" ]; //@gotags:json:"traceid" validate:"required"
+
+     //#上下文
+    string Context = 3 [json_name = "context" ]; //@gotags:json:"context"
+
+    int32 AgentId = 4 [json_name = "agentid" ];  //@gotags:json:"agentid" validate:"required"
+
+    string RobotName = 5 [json_name = "robot_name" ]; //@gotags:json:"robot_name"
+
+    repeated  NluEntity SlotList = 6 [json_name = "parameters" ]; //@gotags:json:"parameters"
+}
+
+message NluEntity{
+    string entity_type  = 1 [ json_name = "entitytype" ];  //@gotags:json:"entitytype"
+
+    string value = 2;
+    string before_value  = 3[ json_name = "beforevalue" ];  //@gotags:json:"beforevalue"
+    string name  = 4 [ json_name = "name" ];
+    int32 status  = 5;
+}
+
+message NluResponse{
+    int32 status = 1;
+    string message = 2;
+    string version = 3;
+    NluResult data = 4;
+}
+
+message NluResult {
+    string algo = 1;
+    string domain_name = 2 [ json_name = "domainname" ];   //@gotags:json:"domainname"
+    string intent_name = 3 [ json_name = "intentname" ];   //@gotags:json:"intentname"
+    repeated  NluEntity parameters = 4;
+    float score = 5;
+    DebugInfo debugInfo = 6;
+}
+
+message DebugInfo {
+  string intent_input = 1 [ json_name = "intent_input" ];
+  string intent_output = 2 [ json_name = "intent_output" ];
+  string domain_input = 3 [ json_name = "domain_input" ];
+  string domain_output = 4 [ json_name = "domain_output" ];
+  repeated  NluEntity entity_trie = 5 [ json_name = "entity_trie" ];
+  repeated  NluEntity ner_entity = 6 [ json_name = "ner_entity" ];
+}
+
+message VersionResponse{
+  string version = 1;
+}
