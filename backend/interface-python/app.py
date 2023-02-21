@@ -153,7 +153,7 @@ exec_result["cost"] = int((time.time() - start_time) * 1000)
         exec(sc, {"exec_result": res})
     except:
         return make_response({"status": "failure", "error": traceback.format_exc()}, 200)
-    if json_re["stream_out"] == "false":
+    if json_re["stream_out"] == "False":
         return make_response({"cost": res["cost"], "data": json.loads(pb_to_json(res["result"]))}, 200)
     return make_response({"cost": res["cost"], "data": [json.loads(pb_to_json(r)) for r in res["result"]]}, 200)
 
