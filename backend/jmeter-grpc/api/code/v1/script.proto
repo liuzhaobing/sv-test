@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "./;v1";
+
+//protoc -I. --go_out=. --go-grpc_out=.  script.proto
+
+//脚本服务.
+service Script{
+  /*
+  执行answer节点
+   */
+  rpc ExecAnswerScript(AnswerRequest) returns (AnswerResponse);
+  rpc ExecTriggerScript(AnswerRequest) returns (TriggerResponse);
+}
+
+message AnswerResponse {
+  //返回结果
+  string proResult = 1;
+
+  //回复的tts
+  repeated string answers = 2;
+
+  //执行状态
+  bool status = 3;
+
+  //错误信息
+  string errMsg = 4;
+
+  bool changeNextState = 5;
+  string nextState = 6;
+
+  //是否需要使用意图intent的回复
+  bool useIntentResp = 7;
+}
+
+message AnswerRequest {
+  //脚本
+  string scripts = 1;
+
+  //params
+  string params = 2;
+}
+
+
+message TriggerResponse {
+  //执行状态
+  int32 status = 1; //1表示条件成立， 2表示条件不成立  3. 代码中没有指定是否成立 -1表示执行异常
+
+  //错误信息
+  string errMsg = 2;
+}

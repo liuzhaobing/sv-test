@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package intent.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "api/intent/v1/param.proto";
+import "api/intent/v1/seg.proto";
+import "api/intent/v1/template.proto";
+
+option go_package = "smartvoice-regex/api/intent/v1;v1";
+option java_multiple_files = true;
+option java_package = "intent.api.v1";
+option java_outer_classname = "IntentProtoV1";
+
+
+service Intent {
+  // Intent Recognize
+  rpc Recognize (RecognizeRequest) returns (RecognizeResponses)  {
+    option (google.api.http) = {
+      post: "/intent/v1/recognize"
+      body: "*"
+    };
+  }
+
+  rpc Match(MatchRequest) returns(MatchResponse) {
+    option (google.api.http) = {
+      post: "/intent/v1/match"
+      body: "*"
+    };
+  }
+}
+
+message RecognizeRequest {
+  int64 tagent_id = 1 [(validate.rules).int64 = {gt: 0}]; //sys: 1, user: agentid
+  int64 agent_id = 2 [(validate.rules).int64 = {gt: 0}];
+  string session_id = 3;
+  string robot_id = 4;
+  string robot_name = 5;
+  string trace_id = 6;
+  string query = 7;
+  repeated string context = 8; // 顺序表示搜索优先级, 统一优先级的context用,隔开
+  string lang = 9;
+  SegResult seg_result = 10;
+  bool is_english = 11;
+  bool search_tpl_with_query = 12;
+  string search_type = 13  [(validate.rules).string = {in: ["system", "user"]}];
+  repeated string enabled_domain_ids = 14[(validate.rules).repeated.min_items = 1];
+  map<string, string> settings = 15;
+  SegNerResponse seg_ner_entites = 16;
+  map<string, string> env_info  = 17;
+}
+
+message RecognizeResponses {
+    repeated RecognizeResponse responses = 1;
+}
+
+// The response message containing the greetings
+message RecognizeResponse {
+  string agent_id = 1;
+  string domain_id = 2;
+  string domain = 3;
+  string intent = 4;
+  string intent_id = 5;
+  repeated ParamInfo param_info = 6;
+  repeated string out_context = 7;
+  string in_context = 8;
+  Template template = 9;
+  string algo = 10;
+}
+
+
+message MatchRequest {
+  int64 agent_id = 1 [(validate.rules).int64 = {gt: 0}];
+  string trace_id = 2;
+  string robot_name = 3;
+  string query = 4;
+  bool is_english = 5;
+  repeated string templates = 6;
+  repeated string sentences = 7;
+  SegResult seg_result = 8;
+  SegNerResponse seg_ner_entites = 9;
+  map<string, string> env_info  = 10;
+  map<string, string> settings = 11;
+}
+
+message MatchedTemplate {
+  int64 index = 1;
+  string template = 2;
+  repeated ParamInfo param_info = 3;
+  double score = 4;
+}
+
+message MatchedSentence {
+  int64 index = 1;
+  string sentence = 2;
+  double score = 3;
+}
+
+message MatchResponse {
+  bool matched = 1;
+  repeated MatchedTemplate templates = 2;
+  repeated MatchedSentence sentences = 3;
+}

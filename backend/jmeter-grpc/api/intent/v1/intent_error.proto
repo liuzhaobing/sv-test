@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package intent.v1;
+
+import "errors/errors.proto";
+
+option go_package = "smartvoice-regex/api/intent/v1;v1";
+option java_multiple_files = true;
+/*
+  kratos code: 自定义部分code, 默认采用http code  见: github.com/go-kratos/kratos/v2/errors/types.go
+               其接口GRPCStatus, 会转换为grpc error(只支持部分CODE转换, 见github.com/go-kratos/kratos/v2/internal/httputil/http.go StatusFromGRPCCode)
+  http code: net/http/status.go
+  grpc code: google.golang.org/grpc/codes/codes.go
+             grpc status 错误 接口: GRPCStatus()
+
+  自定义errors.code设计原则 (参照: http code: net/http/status.go):
+    1. 如果在http code范围内可表示, 采用http code, 可重复
+    2. 如果是其他错误, 定义范围在 0 < code <= 600 之间的其他数字
+*/
+enum IntentErrorReason {
+  option (errors.default_code) = 500;
+  UNKOWN = 0;
+  TEMPLATE_NOT_FOUND = 1  [(errors.code) = 404];
+  MATCH_NOT_FOUND = 2  [(errors.code) = 404];
+}

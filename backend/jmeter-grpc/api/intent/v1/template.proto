@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package intent.v1;
+
+option go_package = "smartvoice-regex/api/intent/v1;v1";
+
+message Template {
+  string id = 1;
+  string template = 2;
+  repeated string event = 3;
+}

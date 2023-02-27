@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package api.asrFilter.v1;
+
+option go_package = "nlp-asrFilter-server/api/asrFilter/v1;v1";
+import "google/protobuf/empty.proto";
+
+
+service AsrFilter {
+	rpc ExecAsrFilter (AsrFilterRequest) returns (AsrFilterResponse) {};
+	rpc GetVersion (google.protobuf.Empty) returns (VersionResponse) {};
+}
+
+message AsrFilterRequest{
+	string query = 1 [ json_name = "query" ];
+	string trace_id = 2 [ json_name = "trace_id" ];
+}
+
+message AsrFilterResponse{
+	int32  code = 1;
+	string reason = 2;
+	string message = 3;
+	string version = 4;
+	AsrFilterResult metadata = 5;
+}
+
+message AsrFilterResult{
+	float prob = 1;
+	string model = 2;
+	bool label = 3;
+}
+
+message VersionResponse{
+	string version = 1;
+}

@@ -18,9 +18,37 @@ from utils.utils_handler import Handlers
 from utils.utils_mysql import DataBaseMySQL
 from utils.utils_postgre import DataBasePostGre
 
-with open("conf/config.json", "r") as f:
-    config = json.load(f)
-
+# with open("conf/config.json", "r") as f:
+#     config = json.load(f)
+config = {
+  "DATABASE": {
+    "AUTOTEST": {
+      "host": "172.16.23.33",
+      "user": "root",
+      "password": "",
+      "port": 3306,
+      "dbname": "nlpautotest",
+      "dbtype": "mysql",
+      "dbengine": "pymysql"
+    },
+    "TAGGING": {
+      "host": "172.16.23.5",
+      "user": "postgres",
+      "password": "123456",
+      "port": "30865",
+      "dbname": "crawl"
+    },
+    "CMS": {
+      "host": "172.16.13.134",
+      "user": "bigdata_sync",
+      "password": "1qaz@WSX",
+      "port": 31145,
+      "dbname": "kbs_cms",
+      "dbtype": "mysql",
+      "dbengine": "pymysql"
+    }
+  }
+}
 
 class CMSBadCase:
     """每周二晚上 从线上拉取badcase 用于自动化测试集建设"""

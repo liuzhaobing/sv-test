@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package idbproxy.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "smartvoice-idbproxy/api/idbproxy/v1;v1";
+option java_multiple_files = true;
+option java_package = "idbproxy.api.v1";
+option java_outer_classname = "IdbProxyProtoV1";
+
+service IdbProxy {
+  rpc Report(MetricsPoint) returns (ReportResp){
+    option (google.api.http) = {
+      post:"/idbproxy/v1/report"
+      body:"*"
+    };
+  }
+  rpc BatchReport(BatchMetricsPoint) returns (ReportResp){
+    option (google.api.http) = {
+      post:"/idbproxy/v1/batchreport"
+      body:"*"
+    };
+  }
+}
+
+message BatchMetricsPoint {
+  repeated MetricsPoint infos = 1;
+}
+
+message MetricsPoint {
+  int64 cost = 1 [(validate.rules).int64 = {gte: 0}]; //耗时，单位ms
+  int64 reqtimestamp = 2 [(validate.rules).int64 = {gt: 1600000000000,lt:9999999999999}]; //请求开始时间戳，统一取UTC时间，精确到ms，长度为13位
+  string status = 3 [(validate.rules).string = {in: ["0", "1"]}]; //请求状态，"0"失败，"1"成功
+  string measurement = 4 ; //服务名
+  map<string, string> tags = 6; //各服务自定义tag key-value
+  map<string, string> fields = 7; //各服务自定义field key-value，如果有traceId，请在此填入traceId的kv
+}
+
+message ReportResp {
+  int64 code = 1; // 0 ok，-1 参数错误，-3 写入idb失败 ; batch接口不支持code -3状态
+}

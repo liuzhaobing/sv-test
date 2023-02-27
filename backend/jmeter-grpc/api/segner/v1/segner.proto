@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+package segner.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "smartvoice-segner/api/nlu/v1;v1";
+
+service SegNer {
+  rpc Parse (SegNerRequest) returns (SegNerResponse) {
+      option (google.api.http) = {
+        get:"/segner/v1/parse/{query}"
+      };
+  }
+  rpc BatchParse (BatchSegNerReq) returns (BatchSegNerResponse) {
+    option (google.api.http) = {
+      post:"/segner/v1/batchparse"
+      body:"*"
+    };
+  }
+  rpc Seg (SegNerRequest) returns (SegNerResponse) {
+    option (google.api.http) = {
+      get:"/segner/v1/seg/{query}"
+    };
+  }
+  rpc Ner (SegNerRequest) returns (SegNerResponse) {
+    option (google.api.http) = {
+      get:"/segner/v1/ner/{query}"
+    };
+  }
+  rpc ParseByOptions(SegNerByOptionsRequest) returns (SegNerResponse) {
+    option (google.api.http) = {
+      post:"/segner/v1/parsebyoptions"
+      body:"*"
+    };
+  }
+  rpc TextMatch(MatchReq) returns (MatchRes) {
+    option (google.api.http) = {
+      post:"/segner/v1/match"
+      body:"*"
+    };
+  }
+
+  rpc BatchTextMatch(BatchMatchReq) returns (BatchMatchRes) {
+    option (google.api.http) = {
+      post:"/segner/v1/batchmatch"
+      body:"*"
+    };
+  }
+}
+
+message SegNerRequest {
+  string query = 1;
+  string traceId = 2;
+}
+
+message BatchSegNerReq{
+  repeated string query = 1;
+  string traceId = 2;
+}
+
+message SegNerByOptionsRequest {
+  string query = 1;
+  string traceId = 2;
+  Options options = 3;
+}
+
+message SegNerResponse {
+  repeated Term Words = 1;
+  repeated Term Phrases = 2;
+  repeated Entity Entities = 3;
+}
+
+message SegNerResult {
+  string query = 1;
+  repeated Term Words = 2;
+  repeated Term Phrases = 3;
+  repeated Entity Entities = 4;
+}
+
+message BatchSegNerResponse {
+  repeated SegNerResult BatchParseResults = 1;
+}
+
+message TextPair {
+  string phrase1 = 1;
+  string phrase2 = 2;
+}
+
+message MatchReq {
+  string phrase1 = 1;
+  string phrase2 = 2;
+}
+
+message MatchRes {
+  float score = 1;
+}
+
+message BatchMatchReq {
+  repeated TextPair TextPairs = 1;
+}
+
+message BatchMatchRes {
+  repeated float scores = 1;
+}
+
+message Term {
+  int64 Offset = 1 ;
+  int64 Len = 2 ;
+  string Str = 3 ;
+  string Tag = 4 ;
+}
+
+message Entity {
+  string Str = 1;
+  string Meaning = 2;
+  string Value = 3;
+  string EName = 4;
+  string I18N = 5;
+  string Path = 6;
+  int64 Offset = 7;
+  int64 Len = 8;
+}
+
+message TextNormOptions {
+  optional bool restore_case = 1 [json_name="restore_case"];
+  optional bool cht_to_chs = 2 [json_name="cht_to_chs"];
+  optional bool to_lower = 3 [json_name="to_lower"];
+  optional bool char_to_norm_form = 4 [json_name="char_to_norm_form"];
+}
+
+message WordSegOptions {
+  optional bool enable=1 [json_name="enable"];
+  optional bool ascii_seg_lm_mode=2 [json_name="ascii_seg_lm_mode"];
+  optional bool ascii_seg_lm_pinyin=3 [json_name="ascii_seg_lm_pinyin"];
+  optional bool ascii_seg_lm_comb=4 [json_name="ascii_seg_lm_comb"];
+
+  optional bool use_customized_spec=5 [json_name="use_customized_spec"];
+  optional bool enable_phrase=6 [json_name="enable_phrase"];
+  optional bool person_as_one_word=7 [json_name="person_as_one_word"];
+  optional bool location_as_one_word=8 [json_name="location_as_one_word"];
+  optional bool organization_as_one_word=9 [json_name="organization_as_one_word"];
+}
+
+message NerOptions {
+  optional bool enable = 1[json_name="enable"];
+  optional bool enable_deep_learning = 2[json_name="enable_deep_learning"];
+  optional bool enable_ne_adjustment = 3[json_name="enable_ne_adjustment"];
+  optional bool enable_fine_grained_ner = 4[json_name="enable_fine_grained_ner"];
+  optional bool enable_deep_representation = 5[json_name="enable_deep_representation"];
+}
+
+
+message Options{
+  optional TextNormOptions text_norm=1 [json_name="text_norm"];
+  optional WordSegOptions word_seg=2[json_name="word_seg"];
+  optional NerOptions ner=3[json_name="ner"];
+}

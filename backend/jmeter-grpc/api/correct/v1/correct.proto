@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package api.correct;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+
+option go_package = "nlp-correct-server/api/correct;correct";
+option java_multiple_files = true;
+option java_package = "api.correct";
+
+
+service Correct {
+	rpc CorrectText(CorrectRequest) returns (CorrectResponse){
+		option (google.api.http) = {
+			post : "/nlp-sdk/correct",
+			body : "*",
+		};
+	}
+	rpc GetVersion(CorrectVersionRequest) returns (CorrectVersionResponse){
+			option(google.api.http) = {
+				get: "/nlp-sdk/correct/getVersion",
+			};
+	}
+}
+
+
+message CorrectRequest {
+	int64 agent_id = 1 [(validate.rules).int64 = {gt:0} ];
+	string trace_id =  2 [ (validate.rules).string.min_len = 1];
+	string query  = 3 [ (validate.rules).string.min_len = 1];
+	string robot_name = 4;
+}
+message CorrectResponse {
+	int64  code = 1;
+	string message = 2;
+	string reason = 3;
+	string version = 4;
+	CorrectResult metadata = 5 ;
+}
+
+message CorrectResult {
+	string newQuery  = 1;
+	bool   isNoise  = 2;
+}
+
+message CorrectVersionRequest {
+	string trace_id = 1;
+}
+message CorrectVersionResponse {
+	string version =  1;
+}

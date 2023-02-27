@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package nlu.v2;
+
+import "google/protobuf/empty.proto";
+
+service Classify{
+  rpc IntentRecognize (NluRequest) returns (NluResponse) {};
+  rpc GetNluVersion (google.protobuf.Empty) returns (VersionResponse) {};
+}
+
+message NluRequest{
+    string query = 1 [ json_name = "query" ];
+
+    string trace_id = 2 [ json_name = "trace_id" ];
+
+     //#上下文
+    Context context = 3;
+
+    int32 agent_id = 4 [ json_name = "agent_id" ];
+
+    string robot_name = 5 [ json_name = "robot_name" ];
+
+    repeated  NluEntity parameters = 6;
+}
+
+message Context{
+  repeated Dialogue dialogues = 1 [ json_name = "dialogues" ];
+  string   context_str = 2 [ json_name = "context_str" ];
+  string domain  = 3;
+}
+
+message Dialogue {
+  string   source      = 2;
+  Sentence question    = 3;
+  Sentence answer      = 4;
+  string   trace_id    = 5 [ json_name = "trace_id" ];
+  int64    timestamp   = 6 [ json_name = "timestamp" ];
+}
+
+message Sentence{
+  string     text = 1;
+  Intent     intent = 2;
+  repeated NluEntity  slot_list = 3 [ json_name = "slot_list" ];
+}
+message Intent{
+  string  domain_name = 1;
+  string  intent_name = 2;
+  string  model_name  = 3;
+  float   confidence  = 4;
+  string  out_context = 5;
+}
+
+message NluEntity{
+    string entity_type  = 1 [ json_name = "entitytype" ];
+
+    string value = 2 [ json_name = "value" ];
+
+    string before_value  = 3[ json_name = "beforevalue" ];
+
+    string name  = 4 [ json_name = "name" ];
+
+    int32 status  = 5 [ json_name = "status" ];
+
+}
+
+message NluResponse{
+    int32 code = 1;
+    string reason = 2;
+    string message = 3;
+    NluResult metadata = 4;
+}
+
+message NluResult {
+    string algo = 1;
+    string domain_name = 2;
+    string intent_name = 3;
+    repeated  NluEntity parameters = 4;
+    float score = 5;
+    DebugInfo debugInfo = 6;
+}
+
+message DebugInfo {
+  string intent_input = 1 [ json_name = "intent_input" ];
+  string intent_output = 2 [ json_name = "intent_output" ];
+  string domain_input = 3 [ json_name = "domain_input" ];
+  string domain_output = 4 [ json_name = "domain_output" ];
+  repeated  NluEntity entity_trie = 5 [ json_name = "entity_trie" ];
+  repeated  NluEntity ner_entity = 6 [ json_name = "ner_entity" ];
+  string version = 7;
+}
+
+message VersionResponse{
+  string version = 1;
+}

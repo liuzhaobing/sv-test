@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package texthandle.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "smartvoice-segner/api/texthandle/v1;v1";
+
+service TextHandle {
+  rpc TextSummarize(TextSummarizeReq) returns (TextSummarizeRes) {
+    option (google.api.http) = {
+      post:"/texthandle/v1/summarize"
+      body:"*"
+    };
+  }
+}
+
+message TextSummarizeReq {
+  string question = 1;
+  string text = 2;
+  int32 num = 3;
+  double tmatchWeight = 4; //textMatch 分值所占权重
+}
+
+message TextSummarizeRes {
+  repeated string sentence = 1;
+}

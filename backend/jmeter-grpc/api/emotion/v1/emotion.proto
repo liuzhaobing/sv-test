@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package api.emotion.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "nlp-emotion-server/api/emotion/v1;v1";
+
+
+service CloudmindsEmotion {
+	rpc GetEmotion (EmotionRequest) returns (EmotionReply){
+		option (google.api.http) = {
+			post: "/emotion",
+			body : "*",
+		};
+	};
+	rpc GetFeedback (EmotionRequest) returns (FeedbackReply){
+		option (google.api.http) = {
+			post: "/feedback",
+			body : "*",
+		};
+	};
+	rpc GetAction (EmotionRequest) returns (ActionReply){
+		option (google.api.http) = {
+			post: "/action",
+			body : "*",
+		};
+	};
+	rpc GetVersion (google.protobuf.Empty) returns (EmotionVersionRsp){
+		option (google.api.http) = {
+			get: "/getVersion",
+		};
+	}
+}
+
+
+message EmotionRequest {
+	int32 agent_id = 1  [(validate.rules).int32.gt = 0,
+		(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+			description: "角色id"
+			example: '1'
+		}];
+	string trace_id = 2  [(validate.rules).string.min_len=1,(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+		description: "日志链路信息id "
+		example: '"example_test_20221111"'
+	}];
+
+	string query = 3;
+}
+message EmotionReply {
+	int32 status = 1;
+	string version = 2;
+	string message = 3;
+	message EmotionResult {
+		string emotion = 1;
+		float score = 2;
+	}
+	EmotionResult data =4;
+}
+
+
+
+message ActionReply {
+	int32 status = 1;
+	string version = 2;
+	string message = 3;
+	message ActionResult {
+		string action = 1;
+		float score = 2;
+	}
+	ActionResult data =4;
+}
+
+
+
+message FeedbackReply {
+	int32 status = 1;
+	string version = 2;
+	string message = 3;
+	message FeedbackResult {
+		bool label = 1;
+		float score = 2;
+	}
+	FeedbackResult data =4;
+}
+
+
+message EmotionVersionRsp{
+	string version =1;
+}
+

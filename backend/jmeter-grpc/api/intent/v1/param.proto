@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package intent.v1;
+
+option go_package = "smartvoice-regex/api/intent/v1;v1";
+
+message ParamInfo {
+  string name = 1;
+  string value = 2;
+  string entity_type = 3;
+  string before_value = 4;
+  int64  type = 5;
+  int64  off = 6;
+  int64  len = 7;
+}
