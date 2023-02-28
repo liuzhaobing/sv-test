@@ -1,0 +1,126 @@
+syntax = "proto3";
+package pb;
+option go_package = "./pb";
+message AddEntity2TrieReq { bytes data = 1; }
+
+message AddEntity2TrieResp { string msg = 1; }
+
+message GetAllEntitiesInSentReq {
+  repeated string entities = 1;
+  string query = 2;
+  string agent_id = 3;
+}
+
+message GetAllEntitiesInSentResp { string msg = 1; }
+
+message GetAllEntitiesByTypeReq {
+  repeated string entities = 1;
+  string query = 2;
+  string agent_id = 3;
+  int32 type = 4; // 1.ner+trie 2.ner 3.trie
+  string traceId = 5;
+}
+
+message GetAllEntitiesByTypeResp {
+  message RecoItem {
+    string before = 1;
+    string after = 2;
+    int32 status = 3; // 0 正常，1 黑名单
+    int64 off = 4;
+    int64 len = 5;
+  }
+  message RecoItemSlice { repeated RecoItem items = 1; }
+  message RecoResult {
+      map<string, RecoItemSlice> result = 1;
+      int32 engine = 2; //1:ner 2.trie
+      int32 cost = 3; //单位ms
+  }
+  repeated RecoResult result_list = 1;
+  string version = 2;
+}
+
+message GetAllEntitiesReq {
+  string query = 1;
+  string agent_id = 2;
+}
+
+message GetAllEntitiesResp { string msg = 1; }
+
+message GetMatchedEntitiesInSentReq {
+  repeated string words = 1;
+  string agent_id = 2;
+}
+
+message GetMatchedEntitiesInSentResp {
+  map<string, Entity> entities = 1;
+  message Entity { map<string, string> m = 2; }
+}
+
+message GetLongestEntityReq {
+  string agent_id = 1;
+  string entity = 2;
+  string query = 3;
+  string lang = 4;
+}
+
+message GetLongestEntityResp {
+  string entity_name = 1;
+  string item_name = 2;
+}
+
+message GetSysEntityNameListReq {}
+
+message GetSysEntityNameListResp { repeated string entities = 1; }
+
+message GetSysEntityPatternReq {
+  string entity = 1;
+  string lang = 2;
+}
+
+message GetSysEntityPatternResp { string pattern = 1; }
+
+message TransferSysEntityReq {
+  string entity = 1;
+  string param = 2;
+  string lang = 3;
+}
+
+message TransferSysEntityResp { string msg = 1; }
+
+message EntityInfo {
+  string entityTitle = 1;
+  message EntityItem {
+    string name = 1;
+    repeated string synm = 2;
+  }
+  repeated EntityItem entityItems = 2;
+}
+
+message FindEntitiesReq {
+  string language = 1;
+  string userOrSys = 2;
+  repeated EntityInfo entityInfoArray = 3;
+}
+
+message FindEntitiesResp {
+  bool find = 1;
+  repeated EntityInfo entities = 2;
+}
+// The greeting service definition.
+service EntityTrie {
+  rpc AddEntity2Trie(AddEntity2TrieReq) returns (AddEntity2TrieResp) {}
+  rpc GetAllEntitiesInSent(GetAllEntitiesInSentReq)
+      returns (GetAllEntitiesInSentResp) {}
+  rpc GetAllEntities(GetAllEntitiesReq) returns (GetAllEntitiesResp) {}
+  rpc GetMatchedEntitiesInSent(GetMatchedEntitiesInSentReq)
+      returns (GetMatchedEntitiesInSentResp) {}
+  rpc GetLongestEntity(GetLongestEntityReq) returns (GetLongestEntityResp) {}
+  rpc GetSysEntityNameList(GetSysEntityNameListReq)
+      returns (GetSysEntityNameListResp) {}
+  rpc GetSysEntityPattern(GetSysEntityPatternReq)
+      returns (GetSysEntityPatternResp) {}
+  rpc TransferSysEntity(TransferSysEntityReq) returns (TransferSysEntityResp) {}
+  rpc FindEntities(FindEntitiesReq) returns (FindEntitiesResp) {}
+  rpc GetAllEntitiesByType(GetAllEntitiesByTypeReq)
+      returns (GetAllEntitiesByTypeResp) {}
+}
