@@ -20,7 +20,7 @@ if __name__ == '__main__':
         "volume": "3",
         "pitch": "medium",
         "emotions": "Gentle",
-        "parameter_speaker_name": "DaSiRu",
+        "parameter_speaker_name": "DaXiaoFang",
         "parameter_digital_person": "SweetGirl",
         "parameter_flag": {
             "mouth": "true",
@@ -28,7 +28,9 @@ if __name__ == '__main__':
             "expression": "true"
         }
     }
-    ins = Interface(url="172.16.23.15:31349", stub=tts_pb2_grpc.CloudMindsTTSStub)
+    url = "172.16.23.15:31349"  # fit-86
+    # url = "172.16.23.17:31795"  # sit-134
+    ins = Interface(url=url, stub=tts_pb2_grpc.CloudMindsTTSStub)
     result = ins.call(message=tts_pb2.TtsReq(), func=ins.stub.Call, payload=payload)
     pcm = b""
     for r in result:
