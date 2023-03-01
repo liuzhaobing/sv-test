@@ -234,7 +234,11 @@ exec_result["cost"] = int((time.time() - start_time) * 1000)
 
     if not os.path.isfile(proto_file_pb2) or not os.path.isfile(proto_file_pb2_grpc):
         if not os.path.isfile(proto_file):
-            return make_response({"status": "failure", "error": f"not find {proto_file}"}, 200)
+            check_proto_use_history = ProtoManagement.query.filter_by(proto_name_en=json_re["proto"]).count()
+            if not check_proto_use_history:
+                return make_response({"status": "failure", "error": f"not find {proto_file}"}, 200)
+            result = ProtoManagement.query.filter_by(proto_name_en=json_re["proto"]).first()
+            write_local_file(json_re["proto"], result.proto_content)
         result, cmd = generate_pb(proto_file)
         if result != 0:
             return make_response({"status": "failure", "error": f'execute command error: {cmd}', "code": result}, 200)
