@@ -9,6 +9,7 @@ from flask import make_response
 from flask import request
 from google.protobuf import json_format
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import *
 
 app = Flask(__name__)
 logger = logging.getLogger('gunicorn.error')
@@ -21,6 +22,8 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root@172.16.23.33:3306/
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["SQLALCHEMY_COMMIT_ON_TEARDOWN"] = True
 db = SQLAlchemy(app)
+
+CORS(app, supports_credentials=True)
 
 
 class ProtoManagement(db.Model):
@@ -138,7 +141,8 @@ def proto_management_log():
 @app.route('/proto/logs/<proto_name_en>', methods=['GET', 'PUT', 'DELETE'])
 def proto_management_log_crud(proto_name_en):
     if request.method == "GET":
-        result = ProtoManagementLog.query.filter_by(proto_name_en=proto_name_en).order_by(ProtoManagementLog.last_access_time.desc())
+        result = ProtoManagementLog.query.filter_by(proto_name_en=proto_name_en).order_by(
+            ProtoManagementLog.last_access_time.desc())
         return make_response({"status": "success", "data": [item.to_dict() for item in result]}, 200)
 
     if request.method == "DELETE":
