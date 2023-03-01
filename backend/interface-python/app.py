@@ -50,6 +50,8 @@ class ProtoManagementLog(db.Model):
     last_access_request = db.Column(db.Text)
     last_access_response = db.Column(db.Text)
     last_access_time = db.Column(db.DATETIME, default=datetime.now())
+    stream_in = db.Column(db.String(255))
+    stream_out = db.Column(db.String(255))
 
     def to_dict(self):
         return {
@@ -59,7 +61,9 @@ class ProtoManagementLog(db.Model):
             "last_access_function": self.last_access_function,
             "last_access_request": self.last_access_request,
             "last_access_response": self.last_access_response,
-            "last_access_time": self.last_access_time.strftime("%Y-%m-%d %H:%M:%S")
+            "last_access_time": self.last_access_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "stream_in": self.stream_in,
+            "stream_out": self.stream_out
         }
 
 
@@ -124,7 +128,9 @@ def proto_management_log():
                                        last_access_address=json_re["last_access_address"],
                                        last_access_function=json_re["last_access_function"],
                                        last_access_request=json_re["last_access_request"],
-                                       last_access_response=json_re["last_access_response"])
+                                       last_access_response=json_re["last_access_response"],
+                                       stream_in=json_re["stream_in"],
+                                       stream_out=json_re["stream_out"])
         result = db.session.add(new_proto)
         return make_response({"status": "success", "data": result}, 200)
 
@@ -255,6 +261,8 @@ exec_result["cost"] = int((time.time() - start_time) * 1000)
         database_log.last_access_function = func
         database_log.last_access_request = json.dumps(json_re["payload"], ensure_ascii=False)
         database_log.last_access_response = json.dumps(response_json, ensure_ascii=False)
+        database_log.stream_in = json_re["stream_in"]
+        database_log.stream_out = json_re["stream_out"]
         db.session.add(database_log)
         return make_response(response_json, 200)
     except:
