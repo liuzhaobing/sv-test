@@ -138,8 +138,8 @@ def proto_management_log():
 @app.route('/proto/logs/<proto_name_en>', methods=['GET', 'PUT', 'DELETE'])
 def proto_management_log_crud(proto_name_en):
     if request.method == "GET":
-        result = ProtoManagementLog.query.filter_by(proto_name_en=proto_name_en).first()
-        return make_response({"status": "success", "data": result.to_dict()}, 200)
+        result = ProtoManagementLog.query.filter_by(proto_name_en=proto_name_en).order_by(ProtoManagementLog.last_access_time.desc())
+        return make_response({"status": "success", "data": [item.to_dict() for item in result]}, 200)
 
     if request.method == "DELETE":
         result = ProtoManagementLog.query.filter_by(proto_name_en=proto_name_en).delete()
