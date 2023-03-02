@@ -132,6 +132,7 @@ def proto_management_log():
                                        last_access_function=json_re["last_access_function"],
                                        last_access_request=json_re["last_access_request"],
                                        last_access_response=json_re["last_access_response"],
+                                       last_access_time=datetime.now(),
                                        stream_in=json_re["stream_in"],
                                        stream_out=json_re["stream_out"])
         result = db.session.add(new_proto)

@@ -442,11 +442,11 @@
           </CounterConfig>
           <hashTree/>
           <vn.zalopay.benchmark.GRPCSampler guiclass="vn.zalopay.benchmark.GRPCSamplerGui" testclass="vn.zalopay.benchmark.GRPCSampler" testname="classify" enabled="true">
-            <stringProp name="GRPCSampler.protoFolder">D:\api\classify\v2</stringProp>
+            <stringProp name="GRPCSampler.protoFolder">D:\GitLab\develop\sv-test\backend\jmeter-grpc\api\classify\v2</stringProp>
             <stringProp name="GRPCSampler.libFolder"></stringProp>
             <stringProp name="GRPCSampler.metadata"></stringProp>
-            <stringProp name="GRPCSampler.host">172.16.23.15</stringProp>
-            <stringProp name="GRPCSampler.port">31963</stringProp>
+            <stringProp name="GRPCSampler.host">172.16.23.32</stringProp>
+            <stringProp name="GRPCSampler.port">30590</stringProp>
             <stringProp name="GRPCSampler.fullMethod">nlu.v2.Classify/IntentRecognize</stringProp>
             <stringProp name="GRPCSampler.deadline">100000000000</stringProp>
             <boolProp name="GRPCSampler.tls">false</boolProp>
