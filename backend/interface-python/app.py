@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import subprocess
 from datetime import datetime
 
 from flask import Flask
@@ -81,9 +82,9 @@ def proto_management():
         check_proto_use_history = ProtoManagement.query.filter_by(proto_name_en=json_re["proto_name_en"]).count()
         write_local_file(json_re["proto_name_en"], json_re["proto_content"])
         gen_res, cmd = generate_pb(json_re["proto_name_en"])
-        if gen_res != 0:
+        if len(gen_res) > 0:
             # 判断pb文件生成是否成功
-            return make_response({"status": "failure", "error": f'execute command error: {cmd}', "code": gen_res}, 200)
+            return make_response({"status": "failure", "error": f'execute command {cmd} error: {gen_res}'}, 200)
 
         if not check_proto_use_history:
             # 判断之前是否有存储过此proto文件
@@ -112,9 +113,9 @@ def proto_management_crud(nid):
         json_re = json.loads(data)
         write_local_file(json_re["proto_name_en"], json_re["proto_content"])
         gen_res, cmd = generate_pb(json_re["proto_name_en"])
-        if gen_res != 0:
+        if len(gen_res) > 0:
             # 判断pb文件生成是否成功
-            return make_response({"status": "failure", "error": f'execute command error: {cmd}', "code": gen_res}, 200)
+            return make_response({"status": "failure", "error": f'execute command {cmd} error: {gen_res}'}, 200)
         result = ProtoManagement.query.filter_by(id=nid).update(json_re)
         return make_response({"status": "success", "data": result}, 200)
 
@@ -170,8 +171,11 @@ def check_file_exists(filename: str) -> bool:
 
 
 def generate_pb(proto_file):
-    cmd = f'python -m grpc_tools.protoc -I. -I./src --python_out=. --grpc_python_out=. {proto_file}'
-    return os.system(cmd), cmd
+    cmd = f'python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. {proto_file}'
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    output, errors = proc.communicate()
+    output_str = output.decode("utf-8")
+    return output_str, cmd
 
 
 @app.route('/interface', methods=['POST', ])
@@ -243,9 +247,10 @@ exec_result["cost"] = int((time.time() - start_time) * 1000)
                 return make_response({"status": "failure", "error": f"not find {proto_file}"}, 200)
             result = ProtoManagement.query.filter_by(proto_name_en=json_re["proto"]).first()
             write_local_file(json_re["proto"], result.proto_content)
-        result, cmd = generate_pb(proto_file)
-        if result != 0:
-            return make_response({"status": "failure", "error": f'execute command error: {cmd}', "code": result}, 200)
+        gen_res, cmd = generate_pb(proto_file)
+        if len(gen_res) > 0:
+            # 判断pb文件生成是否成功
+            return make_response({"status": "failure", "error": f'execute command {cmd} error: {gen_res}'}, 200)
     url = json_re["url"]
     res = {"result": []}
     func = json_re["func"]
