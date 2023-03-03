@@ -172,10 +172,8 @@ def check_file_exists(filename: str) -> bool:
 
 def generate_pb(proto_file):
     cmd = f'python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. {proto_file}'
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    output, errors = proc.communicate()
-    output_str = output.decode("utf-8")
-    return output_str, cmd
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return result.stderr, cmd
 
 
 @app.route('/interface', methods=['POST', ])
