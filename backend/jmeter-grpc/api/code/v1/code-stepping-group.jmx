@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.4.1">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="GRPC-DEBUG" enabled="true">
+      <stringProp name="TestPlan.comments"></stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setup-database" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <JDBCDataSource guiclass="TestBeanGUI" testclass="JDBCDataSource" testname="mysql_connect_nlpautotest" enabled="true">
+          <stringProp name="TestPlan.comments">test_cases</stringProp>
+          <boolProp name="autocommit">true</boolProp>
+          <stringProp name="checkQuery"></stringProp>
+          <stringProp name="connectionAge">5000</stringProp>
+          <stringProp name="connectionProperties"></stringProp>
+          <stringProp name="dataSource">mysql_connect_nlpautotest</stringProp>
+          <stringProp name="dbUrl">jdbc:mysql://172.16.23.33:3306/nlpautotest</stringProp>
+          <stringProp name="driver">com.mysql.jdbc.Driver</stringProp>
+          <stringProp name="initQuery">select count(1) from qa_base_test;</stringProp>
+          <boolProp name="keepAlive">true</boolProp>
+          <stringProp name="password"></stringProp>
+          <stringProp name="poolMax">0</stringProp>
+          <boolProp name="preinit">false</boolProp>
+          <stringProp name="timeout">10000</stringProp>
+          <stringProp name="transactionIsolation">DEFAULT</stringProp>
+          <stringProp name="trimInterval">60000</stringProp>
+          <stringProp name="username">root</stringProp>
+        </JDBCDataSource>
+        <hashTree/>
+      </hashTree>
+      <kg.apc.jmeter.threads.SteppingThreadGroup guiclass="kg.apc.jmeter.threads.SteppingThreadGroupGui" testclass="kg.apc.jmeter.threads.SteppingThreadGroup" testname="code-stepping-group" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <stringProp name="ThreadGroup.num_threads">60</stringProp>
+        <stringProp name="Threads initial delay">0</stringProp>
+        <stringProp name="Start users count">2</stringProp>
+        <stringProp name="Start users count burst">30</stringProp>
+        <stringProp name="Start users period">300</stringProp>
+        <stringProp name="Stop users count">5</stringProp>
+        <stringProp name="Stop users period">1</stringProp>
+        <stringProp name="flighttime">300</stringProp>
+        <stringProp name="rampUp">5</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">-1</intProp>
+        </elementProp>
+      </kg.apc.jmeter.threads.SteppingThreadGroup>
+      <hashTree>
+        <JDBCSampler guiclass="TestBeanGUI" testclass="JDBCSampler" testname="get_cases_qa" enabled="true">
+          <stringProp name="dataSource">mysql_connect_nlpautotest</stringProp>
+          <stringProp name="query">select question,domain,intent from skill_base_test where usetest=1 and case_version&lt;10 and domain not in (&apos;music&apos;,&apos;dance&apos;);</stringProp>
+          <stringProp name="queryArguments"></stringProp>
+          <stringProp name="queryArgumentsTypes"></stringProp>
+          <stringProp name="queryTimeout"></stringProp>
+          <stringProp name="queryType">Select Statement</stringProp>
+          <stringProp name="resultSetHandler">Store as String</stringProp>
+          <stringProp name="resultSetMaxRows"></stringProp>
+          <stringProp name="resultVariable"></stringProp>
+          <stringProp name="variableNames">question,domain,intent</stringProp>
+        </JDBCSampler>
+        <hashTree/>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="get_each_case" enabled="true">
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+          <stringProp name="LoopController.loops">${question_#}</stringProp>
+        </LoopController>
+        <hashTree>
+          <CounterConfig guiclass="CounterConfigGui" testclass="CounterConfig" testname="Counter" enabled="true">
+            <stringProp name="CounterConfig.start">1</stringProp>
+            <stringProp name="CounterConfig.end">${question_#}</stringProp>
+            <stringProp name="CounterConfig.incr">1</stringProp>
+            <stringProp name="CounterConfig.name">i</stringProp>
+            <stringProp name="CounterConfig.format"></stringProp>
+            <boolProp name="CounterConfig.per_user">false</boolProp>
+          </CounterConfig>
+          <hashTree/>
+          <vn.zalopay.benchmark.GRPCSampler guiclass="vn.zalopay.benchmark.GRPCSamplerGui" testclass="vn.zalopay.benchmark.GRPCSampler" testname="scrpit" enabled="true">
+            <stringProp name="GRPCSampler.protoFolder">D:\GitLab\develop\sv-test\backend\jmeter-grpc\api\code\v1</stringProp>
+            <stringProp name="GRPCSampler.libFolder"></stringProp>
+            <stringProp name="GRPCSampler.metadata"></stringProp>
+            <stringProp name="GRPCSampler.host">172.16.23.84</stringProp>
+            <stringProp name="GRPCSampler.port">31875</stringProp>
+            <stringProp name="GRPCSampler.fullMethod">v1.Script/ExecAnswerScript</stringProp>
+            <stringProp name="GRPCSampler.deadline">100000000000</stringProp>
+            <boolProp name="GRPCSampler.tls">false</boolProp>
+            <boolProp name="GRPCSampler.tlsDisableVerification">true</boolProp>
+            <stringProp name="GRPCSampler.channelAwaitTermination">1000</stringProp>
+            <stringProp name="GRPCSampler.maxInboundMessageSize">4194304</stringProp>
+            <stringProp name="GRPCSampler.maxInboundMetadataSize">8192</stringProp>
+            <stringProp name="GRPCSampler.requestJson">{
+  &quot;scripts&quot;: &quot;# -*- coding:utf-8 -*-\r\nimport json\r\nimport random\r\n\r\n\&quot;\&quot;\&quot;数据统一存储到story_list 结构如下：\r\n同时会从story_list随机抽出一个故事 存储到now_story_info\r\nstory_list = [\r\n    {\r\n        \&quot;标题\&quot;: \&quot;妙话后蜀主题春联\&quot;,\r\n        \&quot;中文故事\&quot;: \&quot;\&quot;,\r\n        \&quot;主角\&quot;: \&quot;\&quot;,\r\n        \&quot;国别\&quot;: \&quot;\&quot;,\r\n        \&quot;寓意\&quot;: \&quot;\&quot;,\r\n        \&quot;时间\&quot;: \&quot;\&quot;,\r\n        \&quot;权重\&quot;: \&quot;\&quot;,\r\n        \&quot;空间\&quot;: \&quot;\&quot;,\r\n        \&quot;类型\&quot;: \&quot;\&quot;,\r\n        \&quot;英文故事\&quot;: \&quot;\&quot;\r\n    }\r\n]\r\n\&quot;\&quot;\&quot;\r\n\r\n\r\ndef return_slot_value(slot_name):\r\n    if proResult[\&quot;quresult\&quot;].__contains__(\&quot;slots\&quot;):\r\n        if proResult[\&quot;quresult\&quot;][\&quot;slots\&quot;].__contains__(slot_name):\r\n            if proResult[\&quot;quresult\&quot;][\&quot;slots\&quot;][slot_name].__contains__(\&quot;value\&quot;):\r\n                return proResult[\&quot;quresult\&quot;][\&quot;slots\&quot;][slot_name][\&quot;value\&quot;]\r\n            elif proResult[\&quot;quresult\&quot;][\&quot;slots\&quot;][slot_name].__contains__(\&quot;origin\&quot;):\r\n                return proResult[\&quot;quresult\&quot;][\&quot;slots\&quot;][slot_name][\&quot;origin\&quot;]\r\n    return None\r\n\r\n\r\ndef return_variable_value(var_name):\r\n    if proResult[\&quot;session\&quot;].__contains__(\&quot;variables\&quot;):\r\n        if proResult[\&quot;session\&quot;][\&quot;variables\&quot;].__contains__(var_name):\r\n            return proResult[\&quot;session\&quot;][\&quot;variables\&quot;][var_name][\&quot;value\&quot;]\r\n    return None\r\n\r\n\r\ndef story(story_title=None, story_tag=None, story_authorname=None, story_collection=None, story_type=None,\r\n          skip=0, limit=10):\r\n    \&quot;\&quot;\&quot;Story\r\n    :param skip: 跳过多少个\r\n    :param limit: 查询后 显示数量\r\n    :param story_title:\r\n    :param story_tag: tag涉及多值\r\n    :param story_authorname:\r\n    :param story_collection:\r\n    :param story_type:\r\n    :return:\r\n    \&quot;\&quot;\&quot;\r\n\r\n    if story_tag and \&quot;||\&quot; in story_tag:\r\n        \&quot;\&quot;\&quot;与SDK约定 story_tag 传多值 以||分割\&quot;\&quot;\&quot;\r\n        story_tag = story_tag.split(\&quot;||\&quot;)\r\n    elif story_tag:\r\n        story_tag = [story_tag]\r\n\r\n    # by title and tag\r\n    if story_tag and story_title:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_title\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: story_tag\r\n                            }\r\n                        ],\r\n                        \&quot;target_ot\&quot;: \&quot;storyTAG\&quot;,\r\n                        \&quot;target_symbol\&quot;: \&quot;storyTAG\&quot;,\r\n                        \&quot;rel_concepts\&quot;: [\r\n                            \&quot;relation\&quot;\r\n                        ],\r\n                        \&quot;rel_filter\&quot;: [],\r\n                        \&quot;rel_symbol\&quot;: \&quot;r1\&quot;,\r\n                        \&quot;steps\&quot;: 0,\r\n                        \&quot;direction\&quot;: 2\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # by title and authorname\r\n    elif story_authorname and story_title:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_title\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_authorname\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_ot\&quot;: \&quot;storyCreator\&quot;,\r\n                        \&quot;target_symbol\&quot;: \&quot;storyCreator\&quot;,\r\n                        \&quot;rel_concepts\&quot;: [\r\n                            \&quot;relation\&quot;\r\n                        ],\r\n                        \&quot;rel_filter\&quot;: [],\r\n                        \&quot;rel_symbol\&quot;: \&quot;r1\&quot;,\r\n                        \&quot;steps\&quot;: 0,\r\n                        \&quot;direction\&quot;: 0\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # by title and collection\r\n    elif story_collection and story_title:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_title\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_collection\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_ot\&quot;: \&quot;storyColl\&quot;,\r\n                        \&quot;target_symbol\&quot;: \&quot;storyColl\&quot;,\r\n                        \&quot;rel_concepts\&quot;: [\r\n                            \&quot;relation\&quot;\r\n                        ],\r\n                        \&quot;rel_filter\&quot;: [],\r\n                        \&quot;rel_symbol\&quot;: \&quot;r1\&quot;,\r\n                        \&quot;steps\&quot;: 0,\r\n                        \&quot;direction\&quot;: 0\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # by title\r\n    elif story_title:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_title\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # by tag\r\n    elif story_tag:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_filter\&quot;: [],\r\n                        \&quot;target_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: story_tag\r\n                            }\r\n                        ],\r\n                        \&quot;target_ot\&quot;: \&quot;storyTAG\&quot;,\r\n                        \&quot;target_symbol\&quot;: \&quot;storyTAG\&quot;,\r\n                        \&quot;rel_concepts\&quot;: [\r\n                            \&quot;relation\&quot;\r\n                        ],\r\n                        \&quot;rel_filter\&quot;: [],\r\n                        \&quot;rel_symbol\&quot;: \&quot;r1\&quot;,\r\n                        \&quot;steps\&quot;: 0,\r\n                        \&quot;direction\&quot;: 2\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # by authorname\r\n    elif story_authorname:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_filter\&quot;: [],\r\n                        \&quot;target_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_authorname\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_ot\&quot;: \&quot;storyCreator\&quot;,\r\n                        \&quot;target_symbol\&quot;: \&quot;storyCreator\&quot;,\r\n                        \&quot;rel_concepts\&quot;: [\r\n                            \&quot;relation\&quot;\r\n                        ],\r\n                        \&quot;rel_filter\&quot;: [],\r\n                        \&quot;rel_symbol\&quot;: \&quot;r1\&quot;,\r\n                        \&quot;steps\&quot;: 0,\r\n                        \&quot;direction\&quot;: 0\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # by collection\r\n    elif story_collection:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_filter\&quot;: [],\r\n                        \&quot;target_filter\&quot;: [\r\n                            {\r\n                                \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n                                \&quot;filter_key\&quot;: \&quot;name\&quot;,\r\n                                \&quot;vals\&quot;: [\r\n                                    story_collection\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \&quot;target_ot\&quot;: \&quot;storyColl\&quot;,\r\n                        \&quot;target_symbol\&quot;: \&quot;storyColl\&quot;,\r\n                        \&quot;rel_concepts\&quot;: [\r\n                            \&quot;relation\&quot;\r\n                        ],\r\n                        \&quot;rel_filter\&quot;: [],\r\n                        \&quot;rel_symbol\&quot;: \&quot;r1\&quot;,\r\n                        \&quot;steps\&quot;: 0,\r\n                        \&quot;direction\&quot;: 0\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    # 兜底 不带任何槽位\r\n    else:\r\n        query_conditions = [\r\n            {\r\n                \&quot;skip\&quot;: skip,\r\n                \&quot;limit\&quot;: limit,\r\n                \&quot;path_list\&quot;: [\r\n                    {\r\n                        \&quot;src_filter\&quot;: [],\r\n                        \&quot;src_ot\&quot;: \&quot;storyName\&quot;,\r\n                        \&quot;src_symbol\&quot;: \&quot;storyName\&quot;\r\n                    }\r\n                ],\r\n                \&quot;recv_symbols\&quot;: [\r\n                    \&quot;storyName\&quot;\r\n                ]\r\n            }\r\n        ]\r\n\r\n    if story_type:\r\n        query_conditions[0][\&quot;path_list\&quot;][0][\&quot;src_filter\&quot;].append({\r\n            \&quot;data_type\&quot;: \&quot;string\&quot;,\r\n            \&quot;filter_key\&quot;: \&quot;类型\&quot;,\r\n            \&quot;multi_attr\&quot;: True,\r\n            \&quot;vals\&quot;: [\r\n                story_type\r\n            ]\r\n        })\r\n    return query_conditions\r\n\r\n\r\ndef return_story():\r\n    \&quot;\&quot;\&quot;从获取到的故事列表中随机返回n个\&quot;\&quot;\&quot;\r\n    proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;success\&quot;] = {\&quot;key\&quot;: \&quot;success\&quot;, \&quot;value\&quot;: \&quot;false\&quot;}\r\n    story_list = []\r\n    api_kg = json.loads(proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;api_kg\&quot;][\&quot;value\&quot;])\r\n    \&quot;\&quot;\&quot;接口报错 可能没查到 就表示没有数据\&quot;\&quot;\&quot;\r\n    if api_kg.__contains__(\&quot;msg\&quot;):\r\n        return story_list\r\n\r\n    \&quot;\&quot;\&quot;从返回信息中循环取到所有诗句及其相关信息 存储到poem_list\&quot;\&quot;\&quot;\r\n    for data in api_kg[\&quot;datas\&quot;]:\r\n        if data[\&quot;row\&quot;].__contains__(\&quot;storyName\&quot;):\r\n            if data[\&quot;row\&quot;][\&quot;storyName\&quot;].__contains__(\&quot;node\&quot;):\r\n                story_title = data[\&quot;row\&quot;][\&quot;storyName\&quot;][\&quot;node\&quot;][\&quot;vertexs\&quot;][0][\&quot;name\&quot;]\r\n                a_story_info = {\&quot;标题\&quot;: story_title}\r\n                for x in data[\&quot;row\&quot;][\&quot;storyName\&quot;][\&quot;node\&quot;][\&quot;vertexs\&quot;]:\r\n                    info = x[\&quot;prop_map\&quot;]\r\n                    a_story_info = dict(a_story_info, **info)\r\n                \&quot;\&quot;\&quot;这里将多个类型抽出来 放一个到键[故事类型]中 提供给后续回复节点使用\&quot;\&quot;\&quot;\r\n                if a_story_info.__contains__(\&quot;类型\&quot;):\r\n                    tp = a_story_info[\&quot;类型\&quot;]\r\n                    if tp and \&quot;|\&quot; in tp:\r\n                        tps = tp.split(\&quot;|\&quot;)\r\n                        p = tps[random.randint(0, len(tps) - 1)]\r\n                        a_story_info[\&quot;故事类型\&quot;] = p\r\n                        user_input_story_type = return_slot_value(\&quot;story_tag\&quot;)\r\n                        if user_input_story_type and user_input_story_type in tps:\r\n                            a_story_info[\&quot;故事类型\&quot;] = user_input_story_type\r\n                    else:\r\n                        a_story_info[\&quot;故事类型\&quot;] = tp\r\n                else:\r\n                    a_story_info[\&quot;故事类型\&quot;] = \&quot;\&quot;\r\n                story_list.append(a_story_info)\r\n\r\n    if story_list:\r\n        proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;success\&quot;] = {\&quot;key\&quot;: \&quot;success\&quot;, \&quot;value\&quot;: \&quot;true\&quot;}\r\n        proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;story_list\&quot;] = {\&quot;key\&quot;: \&quot;story_list\&quot;,\r\n                                                           \&quot;value\&quot;: json.dumps(story_list, ensure_ascii=False)}\r\n\r\n        \&quot;\&quot;\&quot;随机抽一个故事\&quot;\&quot;\&quot;\r\n        now_story_info = story_list[random.randint(0, len(story_list) - 1)]\r\n        proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;now_story_info\&quot;] = {\&quot;key\&quot;: \&quot;now_story_info\&quot;,\r\n                                                               \&quot;value\&quot;: json.dumps(now_story_info, ensure_ascii=False)}\r\n        return now_story_info\r\n    return story_list\r\n\r\n\r\ndef check_if_one_available():\r\n    \&quot;\&quot;\&quot;机器人推荐了几个故事后 用户输入 检查用户select的这个是否存在\&quot;\&quot;\&quot;\r\n    proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;success\&quot;] = {\&quot;key\&quot;: \&quot;success\&quot;, \&quot;value\&quot;: \&quot;false\&quot;}\r\n\r\n    now_story_info = {}\r\n    if proResult[\&quot;session\&quot;][\&quot;variables\&quot;].__contains__(\&quot;story_list\&quot;):\r\n        story_list = json.loads(proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;story_list\&quot;][\&quot;value\&quot;])\r\n        index1 = return_slot_value(\&quot;index1\&quot;)\r\n        index2 = return_slot_value(\&quot;index2\&quot;)\r\n        story_title = return_slot_value(\&quot;story_title\&quot;)\r\n        story_title1 = return_slot_value(\&quot;story_title1\&quot;)\r\n        if index1:\r\n            if int(index1) - 1 &gt;= len(story_list):\r\n                return now_story_info\r\n            now_story_info = story_list[int(index1) - 1]\r\n            proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;success\&quot;] = {\&quot;key\&quot;: \&quot;success\&quot;, \&quot;value\&quot;: \&quot;true\&quot;}\r\n            proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;now_story_info\&quot;] = {\&quot;key\&quot;: \&quot;now_story_info\&quot;,\r\n                                                                   \&quot;value\&quot;: json.dumps(now_story_info,\r\n                                                                                       ensure_ascii=False)}\r\n            return now_story_info\r\n\r\n        elif story_title:\r\n            for s in story_list:\r\n                if s[\&quot;标题\&quot;] == story_title:\r\n                    proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;success\&quot;] = {\&quot;key\&quot;: \&quot;success\&quot;, \&quot;value\&quot;: \&quot;true\&quot;}\r\n                    proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;now_story_info\&quot;] = {\&quot;key\&quot;: \&quot;now_story_info\&quot;,\r\n                                                                           \&quot;value\&quot;: json.dumps(s,\r\n                                                                                               ensure_ascii=False)}\r\n                    return now_story_info\r\n            \&quot;\&quot;\&quot;现在只判断用户输入在不在机器人推荐列表 如果不在就没找到 实际应该去图谱再查一次 后面再实现\&quot;\&quot;\&quot;\r\n            query_conditions = story(story_title=story_title)\r\n            proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;query_conditions\&quot;] = {\&quot;key\&quot;: \&quot;query_conditions\&quot;,\r\n                                                                     \&quot;value\&quot;: json.dumps(query_conditions,\r\n                                                                                         ensure_ascii=False)}\r\n            proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;success\&quot;] = {\&quot;key\&quot;: \&quot;success\&quot;, \&quot;value\&quot;: \&quot;again\&quot;}\r\n            return now_story_info\r\n    return now_story_info\r\n\r\n\r\ndef modify_query_conditions():\r\n    now_round = 0\r\n    limit = 20\r\n    current_intent = proResult[\&quot;quresult\&quot;][\&quot;intent\&quot;]\r\n    if proResult[\&quot;session\&quot;].__contains__(\&quot;variables\&quot;):\r\n        if proResult[\&quot;session\&quot;][\&quot;variables\&quot;].__contains__(\&quot;limit\&quot;):\r\n            limit = int(proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;limit\&quot;][\&quot;value\&quot;])\r\n        else:\r\n            proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;limit\&quot;] = {\&quot;key\&quot;: \&quot;limit\&quot;, \&quot;value\&quot;: str(limit)}\r\n\r\n        if proResult[\&quot;session\&quot;][\&quot;variables\&quot;].__contains__(\&quot;now_round\&quot;):\r\n            now_round = int(proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;now_round\&quot;][\&quot;value\&quot;])\r\n        else:\r\n            proResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;now_round\&quot;] = {\&quot;key\&quot;: \&quot;now_round\&quot;, \&quot;value\&quot;: str(now_round)}\r\n    else:\r\n        proResult[\&quot;session\&quot;][\&quot;variables\&quot;] = {\r\n            \&quot;now_round\&quot;: {\&quot;key\&quot;: \&quot;now_round\&quot;, \&quot;value\&quot;: str(now_round)},\r\n            \&quot;limit\&quot;: {\&quot;key\&quot;: \&quot;limit\&quot;, \&quot;value\&quot;: str(limit)}\r\n        }\r\n\r\n    if current_intent == \&quot;Story\&quot;:\r\n        return story(story_title=return_slot_value(\&quot;story_title\&quot;),\r\n                     story_collection=return_slot_value(\&quot;story_collection\&quot;),\r\n                     story_authorname=return_slot_value(\&quot;story_authorname\&quot;),\r\n                     story_tag=return_slot_value(\&quot;story_tag\&quot;),\r\n                     story_type=return_slot_value(\&quot;story_type\&quot;))\r\n\r\n    if current_intent == \&quot;CanStory\&quot;:\r\n        return story(skip=now_round * limit, limit=limit)\r\n\r\n    if current_intent == \&quot;StoryAnother\&quot;:\r\n        return story(skip=now_round * limit, limit=limit)\r\n\r\n\r\nproResult[\&quot;session\&quot;][\&quot;variables\&quot;][\&quot;query_conditions\&quot;] = {\&quot;key\&quot;: \&quot;query_conditions\&quot;,\r\n                                                         \&quot;value\&quot;: json.dumps(modify_query_conditions(),\r\n                                                                             ensure_ascii=False)}\r\n&quot;,
+  &quot;params&quot;: &quot;{\&quot;quresult\&quot;: {\&quot;domain_id\&quot;: 182, \&quot;domain\&quot;: \&quot;story\&quot;, \&quot;intent\&quot;: \&quot;Story\&quot;, \&quot;slots\&quot;: {\&quot;story_tag\&quot;: {\&quot;key\&quot;: \&quot;story_tag\&quot;, \&quot;value\&quot;: \&quot;童话\&quot;, \&quot;origin\&quot;: \&quot;童话\&quot;, \&quot;type\&quot;: \&quot;sys.entity.story-tag\&quot;}}, \&quot;request_params\&quot;: {\&quot;Default\&quot;: \&quot;讲个童话故事\&quot;, \&quot;agentid\&quot;: \&quot;666\&quot;, \&quot;charid\&quot;: \&quot;0\&quot;, \&quot;devicetype\&quot;: \&quot;ginger\&quot;, \&quot;envinfo\&quot;: \&quot;null\&quot;, \&quot;eventtype\&quot;: \&quot;0\&quot;, \&quot;filter_query\&quot;: \&quot;讲个童话故事\&quot;, \&quot;lang\&quot;: \&quot;ZH\&quot;, \&quot;position\&quot;: \&quot;104.061;30.5444\&quot;, \&quot;query\&quot;: \&quot;讲个童话故事\&quot;, \&quot;robotname\&quot;: \&quot;小达\&quot;, \&quot;sessionid\&quot;: \&quot;liuzhaobing@cloudminds\&quot;, \&quot;tenantcode\&quot;: \&quot;cloudminds\&quot;, \&quot;time\&quot;: \&quot;2023-03-03 15:24:27\&quot;, \&quot;traceid\&quot;: \&quot;1b9469ff-40e9-4fa6-b1e4-93dda8d74586\&quot;, \&quot;version\&quot;: \&quot;v3\&quot;, \&quot;week\&quot;: \&quot;周五\&quot;}}, \&quot;session\&quot;: {\&quot;state\&quot;: \&quot;\&quot;, \&quot;variables\&quot;: {\&quot;input_story_authorname\&quot;: {\&quot;key\&quot;: \&quot;input_story_authorname\&quot;, \&quot;value\&quot;: \&quot;\&quot;}, \&quot;input_story_collection\&quot;: {\&quot;key\&quot;: \&quot;input_story_collection\&quot;, \&quot;value\&quot;: \&quot;\&quot;}, \&quot;input_story_name\&quot;: {\&quot;key\&quot;: \&quot;input_story_name\&quot;, \&quot;value\&quot;: \&quot;\&quot;}, \&quot;input_story_tag\&quot;: {\&quot;key\&quot;: \&quot;input_story_tag\&quot;, \&quot;value\&quot;: \&quot;童话\&quot;}, \&quot;limit\&quot;: {\&quot;key\&quot;: \&quot;limit\&quot;, \&quot;value\&quot;: \&quot;20\&quot;}, \&quot;select_count\&quot;: {\&quot;key\&quot;: \&quot;select_count\&quot;, \&quot;value\&quot;: \&quot;3\&quot;}}, \&quot;switch_points\&quot;: {\&quot;domain_id\&quot;: 0, \&quot;domain\&quot;: \&quot;\&quot;, \&quot;state\&quot;: \&quot;\&quot;, \&quot;reback_words\&quot;: \&quot;\&quot;}, \&quot;IsDomainLocked\&quot;: false, \&quot;DomainType\&quot;: \&quot;\&quot;, \&quot;from_routine\&quot;: \&quot;\&quot;, \&quot;pre_node\&quot;: {\&quot;domainid\&quot;: 182, \&quot;node\&quot;: \&quot;gowqbqnbs3\&quot;, \&quot;node_name\&quot;: \&quot;变量控制节点:Story\&quot;, \&quot;node_type\&quot;: \&quot;variable\&quot;}}}&quot;
+}</stringProp>
+          </vn.zalopay.benchmark.GRPCSampler>
+          <hashTree>
+            <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+              <boolProp name="ResultCollector.error_logging">false</boolProp>
+              <objProp>
+                <name>saveConfig</name>
+                <value class="SampleSaveConfiguration">
+                  <time>true</time>
+                  <latency>true</latency>
+                  <timestamp>true</timestamp>
+                  <success>true</success>
+                  <label>true</label>
+                  <code>true</code>
+                  <message>true</message>
+                  <threadName>true</threadName>
+                  <dataType>true</dataType>
+                  <encoding>false</encoding>
+                  <assertions>true</assertions>
+                  <subresults>true</subresults>
+                  <responseData>false</responseData>
+                  <samplerData>false</samplerData>
+                  <xml>false</xml>
+                  <fieldNames>true</fieldNames>
+                  <responseHeaders>false</responseHeaders>
+                  <requestHeaders>false</requestHeaders>
+                  <responseDataOnError>false</responseDataOnError>
+                  <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                  <assertionsResultsToSave>0</assertionsResultsToSave>
+                  <bytes>true</bytes>
+                  <sentBytes>true</sentBytes>
+                  <url>true</url>
+                  <threadCounts>true</threadCounts>
+                  <idleTime>true</idleTime>
+                  <connectTime>true</connectTime>
+                </value>
+              </objProp>
+              <stringProp name="filename"></stringProp>
+            </ResultCollector>
+            <hashTree/>
+            <BackendListener guiclass="BackendListenerGui" testclass="BackendListener" testname="Backend Listener" enabled="true">
+              <elementProp name="arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" enabled="true">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="influxdbMetricsSender" elementType="Argument">
+                    <stringProp name="Argument.name">influxdbMetricsSender</stringProp>
+                    <stringProp name="Argument.value">org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="influxdbUrl" elementType="Argument">
+                    <stringProp name="Argument.name">influxdbUrl</stringProp>
+                    <stringProp name="Argument.value">http://172.16.23.33:27986/write?db=jmeter</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="application" elementType="Argument">
+                    <stringProp name="Argument.name">application</stringProp>
+                    <stringProp name="Argument.value">sv-script</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="measurement" elementType="Argument">
+                    <stringProp name="Argument.name">measurement</stringProp>
+                    <stringProp name="Argument.value">jmeter</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="summaryOnly" elementType="Argument">
+                    <stringProp name="Argument.name">summaryOnly</stringProp>
+                    <stringProp name="Argument.value">false</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="samplersRegex" elementType="Argument">
+                    <stringProp name="Argument.name">samplersRegex</stringProp>
+                    <stringProp name="Argument.value">.*</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="percentiles" elementType="Argument">
+                    <stringProp name="Argument.name">percentiles</stringProp>
+                    <stringProp name="Argument.value">90;95;99</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="testTitle" elementType="Argument">
+                    <stringProp name="Argument.name">testTitle</stringProp>
+                    <stringProp name="Argument.value">sv-script</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="eventTags" elementType="Argument">
+                    <stringProp name="Argument.name">eventTags</stringProp>
+                    <stringProp name="Argument.value">sv-script</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+              <stringProp name="classname">org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient</stringProp>
+            </BackendListener>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="-1783440574">&quot;status&quot;: true</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message"></stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">2</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+          <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ResponseTimesOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Response Times Over Time" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+            <longProp name="interval_grouping">500</longProp>
+            <boolProp name="graph_aggregated">false</boolProp>
+            <stringProp name="include_sample_labels"></stringProp>
+            <stringProp name="exclude_sample_labels"></stringProp>
+            <stringProp name="start_offset"></stringProp>
+            <stringProp name="end_offset"></stringProp>
+            <boolProp name="include_checkbox_state">false</boolProp>
+            <boolProp name="exclude_checkbox_state">false</boolProp>
+          </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+          <hashTree/>
+          <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.ThreadsStateOverTimeGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Active Threads Over Time" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+            <longProp name="interval_grouping">500</longProp>
+            <boolProp name="graph_aggregated">false</boolProp>
+            <stringProp name="include_sample_labels"></stringProp>
+            <stringProp name="exclude_sample_labels"></stringProp>
+            <stringProp name="start_offset"></stringProp>
+            <stringProp name="end_offset"></stringProp>
+            <boolProp name="include_checkbox_state">false</boolProp>
+            <boolProp name="exclude_checkbox_state">false</boolProp>
+          </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+          <hashTree/>
+          <kg.apc.jmeter.vizualizers.CorrectedResultCollector guiclass="kg.apc.jmeter.vizualizers.TransactionsPerSecondGui" testclass="kg.apc.jmeter.vizualizers.CorrectedResultCollector" testname="jp@gc - Transactions per Second" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+            <longProp name="interval_grouping">1000</longProp>
+            <boolProp name="graph_aggregated">false</boolProp>
+            <stringProp name="include_sample_labels"></stringProp>
+            <stringProp name="exclude_sample_labels"></stringProp>
+            <stringProp name="start_offset"></stringProp>
+            <stringProp name="end_offset"></stringProp>
+            <boolProp name="include_checkbox_state">false</boolProp>
+            <boolProp name="exclude_checkbox_state">false</boolProp>
+          </kg.apc.jmeter.vizualizers.CorrectedResultCollector>
+          <hashTree/>
+          <kg.apc.jmeter.vizualizers.CompositeResultCollector guiclass="kg.apc.jmeter.vizualizers.CompositeGraphGui" testclass="kg.apc.jmeter.vizualizers.CompositeResultCollector" testname="jp@gc - Composite Graph" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+            <longProp name="interval_grouping">500</longProp>
+            <boolProp name="graph_aggregated">false</boolProp>
+            <stringProp name="include_sample_labels"></stringProp>
+            <stringProp name="exclude_sample_labels"></stringProp>
+            <stringProp name="start_offset"></stringProp>
+            <stringProp name="end_offset"></stringProp>
+            <boolProp name="include_checkbox_state">false</boolProp>
+            <boolProp name="exclude_checkbox_state">false</boolProp>
+            <collectionProp name="COMPOSITE_CFG">
+              <collectionProp name=""/>
+              <collectionProp name=""/>
+            </collectionProp>
+          </kg.apc.jmeter.vizualizers.CompositeResultCollector>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
