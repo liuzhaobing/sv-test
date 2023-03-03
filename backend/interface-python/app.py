@@ -32,7 +32,7 @@ class ProtoManagement(db.Model):
     proto_name_zh = db.Column(db.String(255))
     proto_name_en = db.Column(db.String(255))
     proto_content = db.Column(db.Text)
-    last_access_time = db.Column(db.DATETIME, default=datetime.now())
+    last_access_time = db.Column(db.DATETIME, default=datetime.now)
 
     def to_dict(self):
         return {
@@ -52,7 +52,7 @@ class ProtoManagementLog(db.Model):
     last_access_function = db.Column(db.String(255))
     last_access_request = db.Column(db.Text)
     last_access_response = db.Column(db.Text)
-    last_access_time = db.Column(db.DATETIME, default=datetime.now())
+    last_access_time = db.Column(db.DATETIME, default=datetime.now)
     stream_in = db.Column(db.String(255))
     stream_out = db.Column(db.String(255))
 
@@ -132,7 +132,6 @@ def proto_management_log():
                                        last_access_function=json_re["last_access_function"],
                                        last_access_request=json_re["last_access_request"],
                                        last_access_response=json_re["last_access_response"],
-                                       last_access_time=datetime.now(),
                                        stream_in=json_re["stream_in"],
                                        stream_out=json_re["stream_out"])
         result = db.session.add(new_proto)
