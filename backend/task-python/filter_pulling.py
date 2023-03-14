@@ -4,6 +4,7 @@
 定时拉取线上标记为噪声的case
 """
 import datetime
+import uuid
 from datetime import timedelta
 import json
 
@@ -101,13 +102,13 @@ class CMSAsrFilter(CMSBadCase):
                     "source": d["dwm_svo_anno_label_event_i_d"]["qa_from"],
                     "domain": d["dwm_svo_anno_label_event_i_d"]["domain__domain_name"],
                     "intent": d["dwm_svo_anno_label_event_i_d"]["intent__intent_name"],
-                    "tts回复": d["dwm_svo_anno_label_event_i_d"]["sv_answer_text"],
-                    "机型": d["dwm_svo_anno_label_event_i_d"]["robot__robot_type_name"],
-                    "AgentID": d["dwm_svo_anno_label_event_i_d"]["sv_agent_id"],
-                    "标注内容": d["dwm_svo_anno_label_event_i_d"]["label_type_name"],
-                    "标注时间": d["dwm_svo_anno_label_event_i_d"]["submit_time"],
-                    "标注人员": tagging_user_map[d["dwm_svo_anno_label_event_i_d"]["operator_id"]],
-                    "日志时间": d["dwm_svo_anno_label_event_i_d"]["event_time"],
+                    "sv_answer": d["dwm_svo_anno_label_event_i_d"]["sv_answer_text"],
+                    "robot_type": d["dwm_svo_anno_label_event_i_d"]["robot__robot_type_name"],
+                    "agent_id": d["dwm_svo_anno_label_event_i_d"]["sv_agent_id"],
+                    "label_name": d["dwm_svo_anno_label_event_i_d"]["label_type_name"],
+                    "label_time": d["dwm_svo_anno_label_event_i_d"]["submit_time"],
+                    "label_operator": tagging_user_map[d["dwm_svo_anno_label_event_i_d"]["operator_id"]],
+                    "event_time": d["dwm_svo_anno_label_event_i_d"]["event_time"],
                     "question_id": d["dwm_svo_anno_label_event_i_d"]["question_id"]
                 }
                 mp = resign_case(mp)
@@ -139,10 +140,10 @@ class CMSAsrFilter(CMSBadCase):
         def list_duplication(list_obj, list_map_obj, column_name):
             for i in range(len(list_map_obj)):
                 if list_map_obj[i][column_name] not in list_obj:
-                    list_map_obj[i]["曾处理过"] = "no"
+                    list_map_obj[i]["show_before"] = "no"
                     list_obj.append(list_map_obj[i][column_name])
                 else:
-                    list_map_obj[i]["曾处理过"] = "yes"
+                    list_map_obj[i]["show_before"] = "yes"
             return list_map_obj, list_obj
 
         self.weekly_data_new, this_time_questions = list_duplication(already_checked_questions, self.weekly_data_old,
@@ -162,9 +163,9 @@ def resign_case(case_info):
 
     if case_info["source"] == "system_service":
         developer = "@Xia Fu 付霞"
-    if case_info["intent"] == "SingerSong":
+    if case_info["intent"] == "SingerSong" or case_info["source"] in ["dialogYou", "dialogNow"]:
         developer = "@Zero Zhou 周成浩"
-    case_info["BUG责任人"] = developer
+    case_info["bug_owner"] = developer
     return case_info
 
 
@@ -193,12 +194,37 @@ def asr_filter_pull(start_time=None, end_time=None,
         feishu_text = f"""干扰测试结果需处理{end_time[:10]}：\n"""
         developer_map = {}
         for item in list_map:
-            if developer_map.__contains__(item["BUG责任人"]):
-                developer_map[item["BUG责任人"]] += 1
+            if developer_map.__contains__(item["bug_owner"]):
+                developer_map[item["bug_owner"]] += 1
             else:
-                developer_map[item["BUG责任人"]] = 1
+                developer_map[item["bug_owner"]] = 1
         for k, v in developer_map.items():
             feishu_text += f"    {k}: {v}\n"
+
+        # 写mongo asr_filter_results表
+        from pymongo import MongoClient
+        client = MongoClient(host="mongodb://root:123456@172.16.23.33:27927/admin?connect=direct")
+        database = client["smartest"]
+        asr_filter_results = database["asr_filter_results"]
+        result1 = asr_filter_results.insert_many(list_map)
+        data_length = len(list_map)
+        success_length = len(result1.inserted_ids)
+        # 写mongo tasks表
+        tasks = database["tasks"]
+        tasks.insert_one({
+            "job_instance_id": str(uuid.uuid4()),
+            "task_name": "干扰测试",
+            "task_type": "asr_filter",
+            "status": 32,
+            "progress_percent": 100,
+            "progress": f"{success_length}/{data_length}",
+            "accuracy": 0,
+            "message": feishu_text,
+            "start_time": start_time,
+            "end_time": end_time,
+            "result_file": file_name
+        })
+
         feishu_text += download_url
         requests.request(method="POST",
                          url=feishu_url,
