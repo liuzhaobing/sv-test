@@ -76,7 +76,7 @@ class CMSAsrFilter(CMSBadCase):
                         'user_default_qa'
                     ],
                     "submit_time&{}": f">='{start_time}',<='{end_time}'",
-                    "@column": "question_id,question_text,qa_from,domain__domain_name,intent__intent_name,param_info,label_type_name,submit_time,event_time,operator_id,sv_answer_text,robot__robot_type_name,sv_agent_id"
+                    "@column": "question_id,question_text,qa_from,domain__domain_name,intent__intent_name,param_info,label_type_name,submit_time,event_time,operator_id,sv_answer_text,robot__robot_type_name,sv_agent_id,rcu_audio"
                 },
                 "page": page,
                 "count": self.pagesize
@@ -93,12 +93,14 @@ class CMSAsrFilter(CMSBadCase):
             pages += 1
 
         tagging_user_map = find_tagging_user()
-
+        self.job_instance_id = str(uuid.uuid4())
         for p in range(pages):
             data = self.get_data_by_page(start_time, end_time, p)
             for d in data:
                 mp = {
+                    "job_instance_id": self.job_instance_id,
                     "question": d["dwm_svo_anno_label_event_i_d"]["question_text"],
+                    "rcu_audio": d["dwm_svo_anno_label_event_i_d"]["rcu_audio"],
                     "source": d["dwm_svo_anno_label_event_i_d"]["qa_from"],
                     "domain": d["dwm_svo_anno_label_event_i_d"]["domain__domain_name"],
                     "intent": d["dwm_svo_anno_label_event_i_d"]["intent__intent_name"],
@@ -212,7 +214,7 @@ def asr_filter_pull(start_time=None, end_time=None,
         # 写mongo tasks表
         tasks = database["tasks"]
         tasks.insert_one({
-            "job_instance_id": str(uuid.uuid4()),
+            "job_instance_id": t.job_instance_id,
             "task_name": "干扰测试",
             "task_type": "asr_filter",
             "status": 32,
