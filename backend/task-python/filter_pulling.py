@@ -159,7 +159,7 @@ def resign_case(case_info):
     if case_info["source"] == "openkg_qa":
         developer = "@Bei Chen 陈贝"
     if case_info["source"] in ["user_default_qa", "third_chitchat"]:
-        developer = "@Jessica Li 李翠姣"
+        developer = "@Gene Li 李东根"
     if case_info["source"] == "common_sense_qa":
         developer = "@Raino Wu 吴雨浓"
 
